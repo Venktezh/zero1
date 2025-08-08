@@ -18,12 +18,10 @@
             line-height: 1.6;
             color: var(--dark);
             background-color: white;
-            margin: 0;
-            padding: 0;
-            -webkit-font-smoothing: antialiased;
-            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            max-width: 800px;
+            -webkit-font-smoothing: antialiased;
         }
         
         header {
@@ -35,9 +33,9 @@
         .nav-container {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;
             gap: 0.5rem;
             margin: 2rem 0;
+            flex-wrap: wrap;
         }
         
         .nav-item {
@@ -65,11 +63,18 @@
             font-size: 2.5rem;
             color: var(--primary);
             text-align: center;
+            margin-bottom: 0.5rem;
         }
         
         .tagline {
             color: var(--secondary);
             font-weight: 300;
+            text-align: center;
+            margin-top: 0;
+        }
+        
+        .section {
+            margin: 2rem 0;
             text-align: center;
         }
         
@@ -78,7 +83,8 @@
             padding: 2rem;
             border-radius: 4px;
             text-align: center;
-            margin: 2rem 0;
+            margin: 2rem auto;
+            max-width: 500px;
         }
         
         .btn {
@@ -86,10 +92,10 @@
             padding: 0.8rem 1.5rem;
             background: var(--accent);
             color: white;
-            text-decoration: none;
             border-radius: 4px;
             border: none;
             cursor: pointer;
+            font-size: 1rem;
             transition: background 0.2s ease;
         }
         
@@ -101,14 +107,28 @@
             display: none;
         }
         
+        .file-input-wrapper {
+            margin: 1rem 0;
+        }
+        
         #fileName {
             margin-left: 10px;
             font-style: italic;
+            color: var(--secondary);
         }
         
         #result {
             margin-top: 1rem;
             color: #27ae60;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
         }
     </style>
 </head>
@@ -126,21 +146,24 @@
         <a href="Cache-clear.html" class="nav-item active">Cache-clear</a>
     </div>
     
-    <div class="cache-box">
+    <div class="section">
         <h2>Cache Management</h2>
         <p>Optimize your system performance with our cache tools.</p>
-        
-        <!-- File Processor -->
-        <label for="fileInput">Select a .txt file:</label>
-        <div style="margin: 1rem 0;">
+    </div>
+    
+    <div class="cache-box">
+        <div class="file-input-wrapper">
             <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
             <span id="fileName">No file chosen</span>
         </div>
         <input type="file" id="fileInput" accept=".txt">
-        
         <div id="result"></div>
         <a id="downloadLink" style="display:none; margin-top:1rem;" class="btn">Download Results</a>
     </div>
+
+    <footer>
+        <p>ClearCache © 2023 | Minimal Interface System</p>
+    </footer>
 
     <script>
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -158,13 +181,11 @@
                     const data = lines.map(line => line.split(',')[0].trim()).filter(Boolean);
                     
                     if (data.length > 0) {
-                        // Get current date in DDMM format
                         const now = new Date();
                         const dd = String(now.getDate()).padStart(2, '0');
                         const mm = String(now.getMonth() + 1).padStart(2, '0');
                         const dateStamp = dd + mm;
                         
-                        // Create downloadable CSV
                         const csvContent = data.join('\n');
                         const blob = new Blob([csvContent], { type: 'text/csv' });
                         downloadLink.href = URL.createObjectURL(blob);
