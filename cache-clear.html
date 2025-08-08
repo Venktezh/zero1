@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache-clear | ClearCache</title>
+    <link rel="stylesheet" href="css/theme.css">
+    <style>
+        /* Page-specific styles (not in theme.css) */
+        #fileInput {
+            display: none;
+        }
+        
+        .file-input-wrapper {
+            margin: 1rem 0;
+        }
+        
+        #fileName {
+            margin-left: 10px;
+            font-style: italic;
+            color: var(--secondary);
+        }
+        
+        #result {
+            margin-top: 1rem;
+            color: #27ae60;
+        }
+        
+        .cache-box {
+            max-width: 500px;
+        }
+        
+        .section {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ClearCache</h1>
+        <p class="tagline">Minimal digital workspace</p>
+    </header>
+    
+    <div class="nav-container">
+        <a href="index.html" class="nav-item">Home</a>
+        <a href="about.html" class="nav-item">About</a>
+        <a href="contact.html" class="nav-item">Contact</a>
+        <a href="projects.html" class="nav-item">Projects</a>
+        <a href="cache-clear.html" class="nav-item active">Cache-clear</a>
+    </div>
+    
+    <div class="content">
+        <div class="section">
+            <h2>Cache Management</h2>
+            <p>Optimize your system performance with our cache tools.</p>
+        </div>
+        
+        <div class="cache-box">
+            <div class="file-input-wrapper">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                <span id="fileName">No file chosen</span>
+            </div>
+            <input type="file" id="fileInput" accept=".txt">
+            <div id="result"></div>
+            <a id="downloadLink" style="display:none; margin-top:1rem;" class="btn">Download Results</a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© ClearCache 2023 | Minimal Interface System</p>
+    </footer>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileName = document.getElementById('fileName');
+            const result = document.getElementById('result');
+            const downloadLink = document.getElementById('downloadLink');
+            
+            if (file) {
+                fileName.textContent = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const lines = e.target.result.split(/\r?\n/).filter(line => line.trim());
+                    const data = lines.map(line => line.split(',')[0].trim()).filter(Boolean);
+                    
+                    if (data.length > 0) {
+                        const now = new Date();
+                        const dd = String(now.getDate()).padStart(2, '0');
+                        const mm = String(now.getMonth() + 1).padStart(2, '0');
+                        const dateStamp = dd + mm;
+                        
+                        const csvContent = data.join('\n');
+                        const blob = new Blob([csvContent], { type: 'text/csv' });
+                        downloadLink.href = URL.createObjectURL(blob);
+                        downloadLink.download = `Cache-clear_${dateStamp}.csv`;
+                        downloadLink.textContent = `Download Cache-clear_${dateStamp}.csv`;
+                        downloadLink.style.display = 'inline-block';
+                        result.textContent = `Processed ${data.length} entries`;
+                    } else {
+                        result.textContent = "No valid data found";
+                        downloadLink.style.display = 'none';
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                fileName.textContent = "No file chosen";
+                result.textContent = "";
+                downloadLink.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
