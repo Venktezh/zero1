@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClearCache | Minimal Interface</title>
+    <title>ClearCache | Dashboard</title>
     <link rel="stylesheet" href="theme.css">
     <style>
         :root {
@@ -13,29 +13,27 @@
             --accent-dark: #2980b9;
             --success: #27ae60;
             --box-bg: #f4f8fa;
-            --shadow: 0 6px 22px 0 rgba(44, 62, 80, 0.09);
+            --shadow: 0 12px 36px 0 rgba(44, 62, 80, 0.09);
         }
-        html, body {
-            height: 100%;
-            margin: 0;
+        body {
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-            background: #fafbfd;
+            background: #f6f7f9;
+            margin: 0;
         }
         header {
             text-align: center;
-            margin-top: 2.5rem;
+            margin-top: 2.3rem;
         }
         header h1 {
-            font-size: 2.7rem;
-            font-weight: 500;
-            letter-spacing: 1.5px;
+            font-size: 2.3rem;
+            font-weight: 600;
             color: var(--primary);
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.25rem;
         }
         header .tagline {
             color: var(--secondary);
-            font-size: 1.08rem;
-            margin-top: 0;
+            font-size: 1.07rem;
+            margin: 0;
         }
         nav {
             margin: 2.2rem auto 0 auto;
@@ -62,66 +60,78 @@
             outline: none;
             border-color: var(--primary);
         }
-        main.content {
+        main.dashboard {
             width: 100%;
-            max-width: 950px;
-            margin: 2rem auto auto auto;
+            max-width: 1120px;
+            margin: 3.5rem auto 0 auto;
             padding: 0 1rem;
-            min-height: 70vh;
+            min-height: 60vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.2rem;
         }
-        .section {
-            margin-bottom: 2.5rem;
+        .dashboard-left {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .section h2 {
+        .dashboard-left h2 {
+            font-size: 2rem;
             color: var(--primary);
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.45rem;
         }
-        .section p {
+        .dashboard-left p {
             color: var(--secondary);
             font-size: 1.15rem;
+            line-height: 1.6;
+        }
+        .dashboard-right {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
         }
         .cache-box {
             background: var(--box-bg);
-            margin: 2.7rem auto;
-            border-radius: 1.5rem;
             box-shadow: var(--shadow);
-            padding: 2.3rem 2rem;
-            max-width: 520px;
+            border-radius: 1.5rem;
+            padding: 2.5rem 2.3rem 2.1rem 2.3rem;
+            max-width: 400px;
+            width: 100%;
             text-align: center;
+            margin: auto;
         }
         .cache-box h3 {
-            font-size: 1.28rem;
+            font-size: 1.35rem;
             color: var(--primary);
-            letter-spacing: 0.5px;
-            margin-top: 0;
-            margin-bottom: 0.3rem;
             font-weight: 700;
+            margin-top: 0;
         }
         .cache-box p, .cache-box h4 {
             color: var(--secondary);
-            margin: 0.5rem 0 0.8rem 0;
+            margin: 0.53rem 0 0.72rem 0;
         }
         .cache-box h4 {
             color: var(--primary);
-            display: block;
             font-weight: bold;
-            font-size: 1.05rem;
+            font-size: 1.08rem;
+            margin-bottom: 0.25rem;
+            margin-top: 0.1rem;
         }
         .file-input-wrapper {
-            margin: 1.9rem 0 0.2rem 0;
+            margin: 1.5rem 0 0.2rem 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1.2rem;
+            gap: 1.1rem;
             flex-wrap: wrap;
         }
         #fileInput { display: none; }
         #fileName {
             font-style: italic;
-            font-size: 1.09rem;
+            font-size: 1.05rem;
             color: var(--secondary);
-            max-width: 240px;
+            max-width: 180px;
             white-space: nowrap;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -131,34 +141,49 @@
             color: #fff;
             border: none;
             border-radius: 0.39rem;
-            padding: 0.76rem 2.2rem;
-            font-size: 1.06rem;
+            padding: 0.74rem 2.1rem;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
             margin-top: 0;
             margin-bottom: 0;
-            transition: background 0.16s, box-shadow 0.18s;
-            box-shadow: 0 2px 6px rgba(44, 62, 80,.06);
+            transition: background 0.16s;
+            box-shadow: 0 1px 8px rgba(44, 62, 80,.07);
             outline: none;
         }
         .btn:active, .btn:focus, .btn:hover {
             background: var(--accent-dark);
         }
         #result {
-            margin: 1.1rem 0;
-            font-size: 1.04rem;
-            min-height: 1.2em;
+            margin: 1.08rem 0 0 0;
+            font-size: 1.01rem;
+            min-height: 1.15em;
             transition: color 0.2s;
         }
         .success { color: var(--success); }
         .error { color: #c0392b;}
         #downloadLink {
             display: none;
-            margin-top: 1.1rem;
-            width: 80%;
+            margin-top: 1.05rem;
+            width: 100%;
             box-sizing: border-box;
-            font-size: 1.05rem;
+            font-size: 1.04rem;
             font-weight: 500;
+            background: var(--primary);
+        }
+        /* Extra dashboard section */
+        .dashboard-section {
+            max-width: 1070px;
+            margin: 3.3rem auto 0 auto;
+            padding: 0 1rem;
+        }
+        .dashboard-section h2 {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .dashboard-section p {
+            color: var(--secondary);
+            font-size: 1.08rem;
         }
         footer {
             margin-top: 2.5rem;
@@ -167,18 +192,28 @@
             font-size: 1rem;
             padding: 1.2rem 0 1rem 0;
         }
-        /* *** Responsive *** */
+        /* Responsive */
+        @media (max-width: 980px) {
+            main.dashboard {
+                grid-template-columns: 1fr;
+                gap: 1.1rem;
+            }
+            .dashboard-right, .dashboard-left {
+                justify-content: center !important;
+                align-items: center !important;
+            }
+        }
         @media (max-width: 600px) {
             .nav-container {
                 flex-wrap: wrap;
                 gap: 0.5rem;
             }
             nav { margin: 1.1rem 0 0 0; }
-            .cache-box { padding: 1.2rem 0.6rem; }
-            header h1 { font-size: 1.8rem; }
-            .section h2 { font-size: 1.2rem; }
-            main.content { padding: 0 0.2rem; }
-            .btn, #downloadLink { width: 100%; }
+            .cache-box { padding: 1rem 0.5rem; max-width: 99vw; }
+            header h1 { font-size: 1.45rem; }
+            .dashboard-left h2 { font-size: 1.19rem; }
+            main.dashboard, .dashboard-section { padding: 0 0.2rem; }
+            .btn, #downloadLink { width: 100%; font-size:1rem;}
         }
     </style>
 </head>
@@ -195,29 +230,31 @@
             <a href="projects.html" class="nav-item">Projects</a>
         </div>
     </nav>
-    <main class="content">
-        <section class="section">
+    <main class="dashboard">
+        <div class="dashboard-left">
             <h2>Clean Interface</h2>
             <p>This minimalist design prioritizes content and functionality. Every element serves a purpose.</p>
-        </section>
-        <div class="cache-box">
-            <h3>Cache Management</h3>
-            <p>Optimize your system performance with our cache tools.</p>
-            <h4>Payout Cache-clear</h4>
-            <p style="margin-top:0;">Just gives you the output file.</p>
-            <div class="file-input-wrapper">
-                <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
-                <span id="fileName">No file chosen</span>
-            </div>
-            <input type="file" id="fileInput" accept=".txt">
-            <div id="result"></div>
-            <a id="downloadLink" class="btn" style="background:var(--primary); margin-top:0.8rem;">Download Results</a>
         </div>
-        <section class="section">
-            <h2>System Ready</h2>
-            <p>All components operational. Designed for simplicity and efficiency.</p>
-        </section>
+        <div class="dashboard-right">
+            <div class="cache-box">
+                <h3>Cache Management</h3>
+                <p>Optimize your system performance with our cache tools.</p>
+                <h4>Payout Cache-clear</h4>
+                <p style="margin-top:0;">Just gives you the output file.</p>
+                <div class="file-input-wrapper">
+                    <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                    <span id="fileName">No file chosen</span>
+                </div>
+                <input type="file" id="fileInput" accept=".txt">
+                <div id="result"></div>
+                <a id="downloadLink" class="btn">Download Results</a>
+            </div>
+        </div>
     </main>
+    <section class="dashboard-section">
+        <h2>System Ready</h2>
+        <p>All components operational. Designed for simplicity and efficiency.</p>
+    </section>
     <footer>
         <p>© ClearCache <span id="year"></span> | Venki</p>
     </footer>
