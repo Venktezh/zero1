@@ -1,248 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CacheQP Extractor - Kite Style</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
-  <style>
-    /* Original styles preserved exactly */
-    body {
-      margin: 0;
-      background: #f5f7fa;
-      font-family: 'Inter', Arial, sans-serif;
-      color: #232c3b;
-    }
-    .sidebar {
-      position: fixed; top: 0; left: 0; bottom: 0; width: 56px;
-      background: #232a3b;
-      display: flex; flex-direction: column; align-items: center;
-      box-shadow: 2px 0 6px rgba(35,44,59,0.09);
-      z-index: 10;
-    }
-    .sidebar img {
-      width: 32px;
-      margin: 18px 0 12px 0;
-    }
-    .sidebar .icon {
-      width: 25px; height: 25px; margin: 24px 0; opacity: 0.48;
-      filter: grayscale(100%);
-    }
-    .navbar {
-      position: fixed; left: 56px; right: 0; top: 0; height: 48px;
-      background: #fff;
-      border-bottom: 1px solid #e6ecf2;
-      box-shadow: 0 2px 4px rgba(35,44,59,0.03);
-      display: flex; align-items: center;
-      padding: 0 32px;
-      font-weight: 500;
-      letter-spacing: 1.5px;
-      font-size: 1.1em;
-      z-index: 9;
-    }
-    .container {
-      margin-left: 56px;
-      margin-top: 70px;
-      display: flex; justify-content: center; align-items: flex-start; min-height: 80vh;
-    }
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 15px 0 rgba(60,72,88,0.1);
-      padding: 36px 38px 32px 38px;
-      width: 380px;
-      margin-top: 36px;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    h2 {
-      font-weight: 600;
-      color: #232c3b;
-      margin-top: 0; margin-bottom: 10px;
-      font-size: 1.55em;
-      letter-spacing: 0.5px;
-    }
-    label {
-      color: #818894;
-      font-size: 1.03em;
-      margin-bottom: 10px;
-    }
-    #fileInput {
-      display: none;
-    }
-    .custom-file-label {
-      display: flex;
-      align-items: center;
-    }
-    .btn {
-      margin: 8px 0 0 0;
-      padding: 10px 29px;
-      font-size: 1em; font-weight: 500;
-      border: none; border-radius: 4px;
-      background: #27b1fc;
-      color: #fff;
-      box-shadow: 0 2px 12px 0 rgba(30, 144, 255, 0.11);
-      cursor: pointer;
-      transition: 0.13s background;
-      letter-spacing: 1.1px;
-    }
-    .btn:active, .btn:hover {
-      background: #1996d6;
-    }
-    .file-name {
-      margin-left: 13px;
-      color: #232c3b;
-      font-size: 1em;
-      font-weight: 400;
-      max-width: 165px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      display: inline-block;
-      vertical-align: middle;
-    }
-    #downloadLink {
-      display: none;
-      text-decoration: none;
-      font-weight: 500;
-      color: #27b1fc;
-      margin-top: 23px;
-      font-size: 1.08em;
-      background: #fff;
-      border: 1.1px solid #27b1fc;
-      padding: 10px 24px;
-      border-radius: 4px;
-      transition: background 0.13s, color 0.13s;
-    }
-    #downloadLink:hover {
-      background: #e8f6fe;
-      color: #1996d6;
-    }
-    #downloadLink::before {
-      content: "⬇️";
-      margin-right: 7px;
-      font-size: 1.14em;
-    }
-    #result {
-      color: #74c245;
-      margin-top: 16px;
-      font-size: 1.07em;
-      letter-spacing: 0.2px;
-      min-height: 22px;
-    }
-    @media (max-width: 650px) {
-      .container {margin-left:0;} .sidebar {display:none;}
-      .navbar {left: 0;}
-      .card {width:90%;padding:20px;}
-      .file-name {max-width: 90px;}
-    }
-
-    /* Added minimal navigation bar to match your theme */
-    .minimal-nav {
-      display: flex;
-      justify-content: center;
-      padding: 15px 0;
-      background: white;
-      border-bottom: 1px solid #e6ecf2;
-    }
-    .minimal-nav a {
-      margin: 0 15px;
-      text-decoration: none;
-      color: #232c3b;
-      font-weight: 500;
-    }
-    .minimal-nav a.active {
-      color: #27b1fc;
-      font-weight: 600;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache-clear | ClearCache</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #7f8c8d;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: white;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            padding: 2rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 2rem 0;
+        }
+        
+        .nav-item {
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            color: var(--primary);
+            border: 1px solid #eee;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        h1 {
+            font-weight: 300;
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        .tagline {
+            color: var(--secondary);
+            font-weight: 300;
+            text-align: center;
+        }
+        
+        .cache-box {
+            background-color: var(--light);
+            padding: 2rem;
+            border-radius: 4px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        #fileName {
+            margin-left: 10px;
+            font-style: italic;
+        }
+        
+        #result {
+            margin-top: 1rem;
+            color: #27ae60;
+        }
+    </style>
 </head>
 <body>
-  <!-- Added minimal navigation to connect with your other pages -->
-  <div class="minimal-nav">
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="contact.html">Contact</a>
-    <a href="Cache-clear.html" class="active">Cache-clear</a>
-  </div>
-
-  <!-- Original content preserved exactly -->
-  <div class="sidebar">
-    <img src="https://kite.zerodha.com/static/images/kite-logo.svg" alt="Kite Logo">
-    <img class="icon" src="https://cdn-icons-png.flaticon.com/512/545/545682.png" alt="Portfolio">
-    <img class="icon" src="https://cdn-icons-png.flaticon.com/512/65/65801.png" alt="File">
-    <img class="icon" src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" alt="Tools">
-  </div>
-  <div class="navbar">
-    CacheQP Extractor &ndash; First Column to CSV
-  </div>
-  <div class="container">
-    <div class="card">
-      <h2>Export codes from TXT</h2>
-      <label for="fileInput">Select a <b>.txt</b> file (comma-separated rows):</label>
-      <div class="custom-file-label">
-        <button class="btn" id="customBtn">Choose File</button>
-        <span class="file-name" id="fileName">No file chosen</span>
-      </div>
-      <input type="file" id="fileInput" accept=".txt">
-      <a id="downloadLink"></a>
-      <div id="result"></div>
+    <header>
+        <h1>ClearCache</h1>
+        <p class="tagline">Minimal digital workspace</p>
+    </header>
+    
+    <div class="nav-container">
+        <a href="index.html" class="nav-item">Home</a>
+        <a href="about.html" class="nav-item">About</a>
+        <a href="contact.html" class="nav-item">Contact</a>
+        <a href="projects.html" class="nav-item">Projects</a>
+        <a href="Cache-clear.html" class="nav-item active">Cache-clear</a>
     </div>
-  </div>
-  <script>
-    // Original JavaScript preserved exactly
-    function pad2(n) { return n < 10 ? '0' + n : n; }
+    
+    <div class="cache-box">
+        <h2>Cache Management</h2>
+        <p>Optimize your system performance with our cache tools.</p>
+        
+        <!-- File Processor -->
+        <label for="fileInput">Select a .txt file:</label>
+        <div style="margin: 1rem 0;">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+            <span id="fileName">No file chosen</span>
+        </div>
+        <input type="file" id="fileInput" accept=".txt">
+        
+        <div id="result"></div>
+        <a id="downloadLink" style="display:none; margin-top:1rem;" class="btn">Download Results</a>
+    </div>
 
-    var fileInput = document.getElementById('fileInput');
-    var customBtn = document.getElementById('customBtn');
-    var fileName = document.getElementById('fileName');
-    var downloadLink = document.getElementById('downloadLink');
-    var resultDiv = document.getElementById('result');
-
-    customBtn.addEventListener('click',function(){
-      fileInput.click();
-    });
-
-    fileInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        fileName.textContent = file.name;
-      } else {
-        fileName.textContent = "No file chosen";
-        downloadLink.style.display = "none";
-        resultDiv.textContent = "";
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        const lines = ev.target.result.split(/\r?\n/).filter(line => line.trim() !== "");
-        if (lines.length === 0) {
-          resultDiv.textContent = "File is empty.";
-          downloadLink.style.display = "none";
-          return;
-        }
-        const data = [];
-        for(let i = 0; i < lines.length; i++) {
-          const firstCol = lines[i].split(',')[0].trim();
-          if (firstCol) data.push([firstCol]);
-        }
-        if (data.length === 0) {
-          resultDiv.textContent = "No valid first-column data found.";
-          downloadLink.style.display = "none";
-          return;
-        }
-        let csvContent = data.map(row => row.join(',')).join('\r\n');
-        const now = new Date();
-        const fileNameOut = "CacheQP_" + pad2(now.getMonth() + 1) + pad2(now.getDate()) + ".csv";
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = fileNameOut;
-        downloadLink.textContent = "Download " + fileNameOut;
-        downloadLink.style.display = "inline-block";
-        resultDiv.textContent = data.length + " codes exported.";
-      };
-      reader.readAsText(file);
-    });
-  </script>
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileName = document.getElementById('fileName');
+            const result = document.getElementById('result');
+            const downloadLink = document.getElementById('downloadLink');
+            
+            if (file) {
+                fileName.textContent = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const lines = e.target.result.split(/\r?\n/).filter(line => line.trim());
+                    const data = lines.map(line => line.split(',')[0].trim()).filter(Boolean);
+                    
+                    if (data.length > 0) {
+                        // Get current date in DDMM format
+                        const now = new Date();
+                        const dd = String(now.getDate()).padStart(2, '0');
+                        const mm = String(now.getMonth() + 1).padStart(2, '0');
+                        const dateStamp = dd + mm;
+                        
+                        // Create downloadable CSV
+                        const csvContent = data.join('\n');
+                        const blob = new Blob([csvContent], { type: 'text/csv' });
+                        downloadLink.href = URL.createObjectURL(blob);
+                        downloadLink.download = `Cache-clear_${dateStamp}.csv`;
+                        downloadLink.textContent = `Download Cache-clear_${dateStamp}.csv`;
+                        downloadLink.style.display = 'inline-block';
+                        result.textContent = `Processed ${data.length} entries`;
+                    } else {
+                        result.textContent = "No valid data found";
+                        downloadLink.style.display = 'none';
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                fileName.textContent = "No file chosen";
+                result.textContent = "";
+                downloadLink.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
