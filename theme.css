@@ -1,0 +1,139 @@
+/* theme.css - Minimal ClearCache Theme */
+:root {
+  /* Color Palette */
+  --primary: #2c3e50;       /* Dark blue-gray - main color */
+  --secondary: #7f8c8d;     /* Medium gray - secondary text */
+  --accent: #3498db;        /* Blue - interactive elements */
+  --light: #ecf0f1;         /* Light gray - backgrounds */
+  --border: #dfe6e9;        /* Light borders */
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--primary);
+  background-color: white;
+  -webkit-font-smoothing: antialiased;
+  padding: 0;
+  margin: 0;
+}
+
+/* Typography */
+h1, h2, h3 {
+  font-weight: 300;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: var(--primary);
+}
+
+h2 {
+  font-size: 1.75rem;
+  margin-top: 2rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+p {
+  color: var(--secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* Layout */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+header {
+  padding: 2rem 0;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Navigation */
+.nav-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 2rem 0;
+}
+
+.nav-item {
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+  color: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.nav-item.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Content Sections */
+.content {
+  padding: 2rem 0;
+}
+
+.section {
+  margin-bottom: 3rem;
+}
+
+/* Cache Box Component */
+.cache-box {
+  background-color: var(--light);
+  padding: 2rem;
+  border-radius: 4px;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--accent);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn:hover {
+  background: #2980b9;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--secondary);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+}
