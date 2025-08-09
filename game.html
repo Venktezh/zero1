@@ -44,6 +44,19 @@
         #message { text-align:center; margin-top: 1em;font-size:1.10em;}
         .success { color: #27ae60}
         .fail { color: #c0392b}
+
+        /* Correctness feedback */
+        .cell-correct {
+            background: #d4f9d2 !important;
+            border-color: #27ae60 !important;
+            transition: background 0.25s, border-color 0.25s;
+        }
+        .cell-wrong {
+            background: #ffeaea !important;
+            border-color: #c0392b !important;
+            transition: background 0.25s, border-color 0.25s;
+        }
+
         @media (max-width: 700px) {
             .sudoku-board { grid-template-columns: repeat(9, 1.6em); grid-template-rows: repeat(9, 1.6em);}
             header h1 { font-size: 1.3rem; }
@@ -77,12 +90,8 @@
     </div>
     <div id="message"></div>
 <script>
-// --- Sudoku generator helpers (simple and fast/easy!) ---
 let level = 1;
-
-// Returns a valid sudoku solution using backtracking (Knuth shuffle)
 function generateSudokuSolution() {
-    // Simple brute force
     let board = [...Array(9)].map(()=>Array(9).fill(0));
     let rows = Array.from({length:9},()=>Array(10).fill(false));
     let cols = Array.from({length:9},()=>Array(10).fill(false));
@@ -111,14 +120,12 @@ function generateSudokuSolution() {
     fill();
     return board;
 }
-
-// Makes an "easy" puzzle out of a solution (keep 36-40 clues)
 function makeEasyPuzzle(solution) {
     let puzzle = solution.map(row=>row.slice());
     let positions = [];
     for(let r=0;r<9;r++) for(let c=0;c<9;c++) positions.push([r,c]);
     shuffle(positions);
-    let clues = 40 - Math.floor(Math.random()*5); // a bit of variation
+    let clues = 40 - Math.floor(Math.random()*5);
     let removed = 81 - clues;
     for(let i=0;i<removed;i++) {
         let [r,c]=positions[i];
@@ -133,10 +140,9 @@ function shuffle(arr) {
     }
     return arr;
 }
-
 let solution = [], puzzle = [];
 function createSudoku(levelIncrement = false) {
-    if (levelIncrement) level++; // For Next Level button
+    if (levelIncrement) level++;
     document.getElementById('level-num').textContent = level;
 
     solution = generateSudokuSolution();
@@ -172,7 +178,15 @@ function checkSudoku() {
     cells.forEach(e => {
         const r = parseInt(e.dataset.r), c = parseInt(e.dataset.c);
         let v = Number(e.value);
-        if (v !== solution[r][c]) correct = false;
+        e.classList.remove('cell-correct','cell-wrong');
+        if (!e.value) {
+            correct = false;
+        } else if (v === solution[r][c]) {
+            e.classList.add('cell-correct');
+        } else {
+            e.classList.add('cell-wrong');
+            correct = false;
+        }
     });
     const message = document.getElementById('message');
     if (correct) {
@@ -183,7 +197,6 @@ function checkSudoku() {
 }
 function restartSudoku() { renderSudoku(); }
 function nextLevel() { createSudoku(true); }
-// First level on load
 createSudoku();
 </script>
 </body>
