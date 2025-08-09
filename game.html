@@ -5,8 +5,56 @@
     <title>Sudoku | ClearCache Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { background: #f6f7f9; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; }
-        h1 { text-align: center; color: #34495e; }
+        :root {
+            --primary: #34495e;
+            --secondary: #7f8c8d;
+            --accent: #3498db;
+            --accent-dark: #2980b9;
+            --success: #27ae60;
+            --box-bg: #f4f8fa;
+            --shadow: 0 12px 36px 0 rgba(44, 62, 80, 0.09);
+        }
+        body { background: #f6f7f9; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin:0; }
+        header {
+            text-align: center;
+            margin-top: 2.3rem;
+        }
+        header h1 {
+            font-size: 2.3rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+        header .tagline {
+            color: var(--secondary);
+            font-size: 1.07rem;
+            margin: 0;
+        }
+        nav {
+            margin: 2.2rem auto 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+        .nav-container {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-item {
+            padding: 0.7rem 2.1rem;
+            border: 1px solid #e3e8ee;
+            border-radius: 0.6rem;
+            background: #fff;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-item.active, .nav-item:focus, .nav-item:hover {
+            background: var(--primary);
+            color: #fff;
+            outline: none;
+            border-color: var(--primary);
+        }
         .sudoku-board {
             display: grid;
             grid-template-columns: repeat(9, 2.3em);
@@ -32,7 +80,6 @@
         /* Thicker lines for blocks */
         .cell.block-right { border-right: 3px solid #34495e;}
         .cell.block-bottom { border-bottom: 3px solid #34495e;}
-        
         .controls { text-align: center; margin: 2em 0; }
         .btn {
             background: #3498db;
@@ -49,19 +96,38 @@
         #message { text-align:center; margin-top: 1em;font-size:1.10em;}
         .success { color: #27ae60}
         .fail { color: #c0392b}
-        a.back { display:block; text-align:center; margin:2em auto 0;color:#34495e;text-decoration:none; }
-        a.back:hover { text-decoration: underline;}
+        /* Responsive */
+        @media (max-width: 700px) {
+            .sudoku-board {
+                grid-template-columns: repeat(9, 1.6em);
+                grid-template-rows: repeat(9, 1.6em);
+            }
+            header h1 { font-size: 1.3rem; }
+            .nav-container { gap:0.45rem; }
+            .nav-item { padding:0.7rem 1rem; font-size:.97rem;}
+        }
     </style>
 </head>
 <body>
-    <h1>Sudoku Game</h1>
+    <header>
+        <h1>ClearCache</h1>
+        <p class="tagline">Minimal digital workspace</p>
+    </header>
+    <nav aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="about.html" class="nav-item">About</a>
+            <a href="contact.html" class="nav-item">Contact</a>
+            <a href="game.html" class="nav-item active">Game</a>
+        </div>
+    </nav>
+    <h2 style="text-align:center;margin-top:2em;font-weight:600;color:#34495e;">Sudoku Game</h2>
     <div class="sudoku-board" id="sudokuBoard"></div>
     <div class="controls">
         <button class="btn" onclick="checkSudoku()">Check</button>
         <button class="btn" onclick="restartSudoku()">Restart</button>
     </div>
     <div id="message"></div>
-    <a href="index.html" class="back">← Back to Dashboard</a>
 <script>
 const puzzle = [
     [5,3,"",  "",7,"",  "","", ""],
