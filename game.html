@@ -2,261 +2,131 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Game | ClearCache</title>
+    <title>Sudoku | ClearCache Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-            background: #f6f7f9;
-            margin: 0;
-        }
-        header {
-            text-align: center;
-            margin-top: 2.3rem;
-        }
-        header h1 {
-            font-size: 2.3rem;
-            font-weight: 600;
-            color: #34495e;
-            margin-bottom: 0.25rem;
-        }
-        header .tagline {
-            color: #7f8c8d;
-            font-size: 1.07rem;
-            margin: 0;
-        }
-        nav {
-            margin: 2.2rem auto 0 auto;
-            display: flex;
+        body { background: #f6f7f9; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; }
+        h1 { text-align: center; color: #34495e; }
+        .sudoku-board {
+            display: grid;
+            grid-template-columns: repeat(9, 2.3em);
+            grid-template-rows: repeat(9, 2.3em);
+            gap: 2px;
             justify-content: center;
+            margin: 2em auto 1em auto;
+            width: fit-content;
         }
-        .nav-container {
-            display: flex;
-            gap: 1rem;
-        }
-        .nav-item {
-            padding: 0.7rem 2.1rem;
-            border: 1px solid #e3e8ee;
-            border-radius: 0.6rem;
+        .cell {
             background: #fff;
-            color: #34495e;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background 0.15s, color 0.15s;
-        }
-        .nav-item.active, .nav-item:focus, .nav-item:hover {
-            background: #34495e;
-            color: #fff;
-            outline: none;
-            border-color: #34495e;
-        }
-        .game-upload-box {
-            background: #f4f8fa;
-            box-shadow: 0 12px 36px 0 rgba(44, 62, 80, 0.09);
-            border-radius: 1.5rem;
-            max-width: 540px;
-            margin: 3rem auto 2rem auto;
-            padding: 2.5rem 2.3rem 2.1rem 2.3rem;
+            border: 1px solid #bbb;
+            font-size: 1.2em;
             text-align: center;
+            outline: none;
         }
-        .file-input-wrapper {
-            margin: 1.5rem 0 1.3rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1.1rem;
-            flex-wrap: wrap;
+        .cell:focus { border-color: #2980b9; }
+        .cell[readonly] {
+            background: #ecf0f1;
+            color: #34495e;
+            font-weight: bold;
         }
-        #customGameFile { display: none; }
-        #gameFileName {
-            font-style: italic;
-            font-size: 1.06rem;
-            color: #7f8c8d;
-            max-width: 230px;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
+        /* Thicker lines for blocks */
+        .cell.block-right { border-right: 3px solid #34495e;}
+        .cell.block-bottom { border-bottom: 3px solid #34495e;}
+        
+        .controls { text-align: center; margin: 2em 0; }
         .btn {
             background: #3498db;
             color: #fff;
             border: none;
-            border-radius: 0.39rem;
-            padding: 0.74rem 2.1rem;
-            font-size: 1rem;
-            font-weight: 500;
+            border-radius: .4em;
+            padding: .6em 1.8em;
+            font-size: 1em;
+            font-family: inherit;
             cursor: pointer;
-            margin-top: 0;
-            margin-bottom: 0;
-            transition: background 0.16s;
-            box-shadow: 0 1px 8px rgba(44, 62, 80,.07);
-            outline: none;
+            margin: 0 .5em;
         }
-        .btn:active, .btn:focus, .btn:hover {
-            background: #2980b9;
-        }
-        #gamePreview {
-            width: 100%;
-            height: 450px;
-            margin-top: 2.5rem;
-            border: 1.7px solid #ddd;
-            background: #fff;
-            border-radius: 1.1rem;
-            box-shadow: 0 6px 24px 0 rgba(44, 62, 80, 0.07);
-        }
-        @media (max-width: 600px) {
-            .game-upload-box { max-width:99vw; padding:1rem 0.5rem;}
-            #gamePreview { height: 320px; }
-        }
+        .btn:hover { background: #2980b9; }
+        #message { text-align:center; margin-top: 1em;font-size:1.10em;}
+        .success { color: #27ae60}
+        .fail { color: #c0392b}
+        a.back { display:block; text-align:center; margin:2em auto 0;color:#34495e;text-decoration:none; }
+        a.back:hover { text-decoration: underline;}
     </style>
 </head>
 <body>
-    <header>
-        <h1>ClearCache</h1>
-        <p class="tagline">Minimal digital workspace</p>
-    </header>
-    <nav aria-label="Main navigation">
-        <div class="nav-container">
-            <a href="index.html" class="nav-item">Home</a>
-            <a href="about.html" class="nav-item">About</a>
-            <a href="contact.html" class="nav-item">Contact</a>
-            <a href="game.html" class="nav-item active">Game</a>
-        </div>
-    </nav>
-    <div class="game-upload-box">
-        <h2>Play a Game</h2>
-        <p>Try the embedded Sudoku game.<br><small>You can also upload your own <b>game.html</b> to preview it here. (No server upload, local only.)</small></p>
-        <div class="file-input-wrapper">
-            <button class="btn" onclick="document.getElementById('customGameFile').click()">Upload game.html</button>
-            <span id="gameFileName">No file chosen</span>
-        </div>
-        <input type="file" id="customGameFile" accept=".html">
+    <h1>Sudoku Game</h1>
+    <div class="sudoku-board" id="sudokuBoard"></div>
+    <div class="controls">
+        <button class="btn" onclick="checkSudoku()">Check</button>
+        <button class="btn" onclick="restartSudoku()">Restart</button>
     </div>
-    <iframe id="gamePreview" srcdoc="
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <title>Sudoku Game</title>
-        <style>
-        body { font-family: sans-serif; margin:0; padding:0; background:#fafcfd; }
-        h1 { font-size: 1.2em; color: #34495e; text-align: center;}
-        table { border-collapse: collapse; margin: auto; background:#fff; border-radius:0.5em; }
-        td {
-            border: 1px solid #bbb; width: 36px; height: 36px;
-            text-align: center; font-size:1.2em; position:relative;
-        }
-        input {
-            width: 34px; height: 34px; text-align: center;
-            font-size: 1.2em; border: none; background: none; outline: none;
-        }
-        tr:nth-child(3n) td, td:nth-child(3n) { border-bottom:2px solid #2980b9;}
-        td:nth-child(3n) { border-right:2px solid #2980b9;}
-        button { margin: 1.3em auto 0.5em auto; display: block;  font-size:1em; padding:0.5em 1.2em; background: #3498db; color:#fff; border:none; border-radius:0.2em;}
-        #msg { text-align:center;font-size:1.06em; }
-        </style>
-        </head>
-        <body>
-            <h1>Sudoku</h1>
-            <form id='sudokuForm'>
-            <table id='sudoku'></table>
-            <button type='submit'>Check Solution</button>
-            <div id='msg'></div>
-            </form>
-            <script>
-                // Default sudoku puzzle (easy)
-                let puzzle = [
-                  [5,3,'', '',7,'','','',''],
-                  [6,'','', 1,9,5,'','',''],
-                  ['','',8, '','', '', '',6,''],
-                  [8,'','', '',6,'','', '',3],
-                  [4,'','', 8,'',3,'','',1],
-                  [7,'','', '',2,'','', '',6],
-                  ['','',6, '', '', '',2,8,''],
-                  ['','', '', 4,1,9,'','',5],
-                  ['','', '', '',8,'','',7,9]
-                ];
-                const sudoku = document.getElementById('sudoku');
-                for(let r=0;r<9;r++) {
-                   let tr = document.createElement('tr');
-                   for(let c=0;c<9;c++) {
-                     let td = document.createElement('td');
-                     if(puzzle[r][c]!='') {
-                         td.innerText = puzzle[r][c];
-                         td.style.color='#2980b9';
-                     } else {
-                         let inp = document.createElement('input');
-                         inp.maxLength=1; inp.pattern='[1-9]';
-                         td.appendChild(inp);
-                     }
-                     tr.appendChild(td);
-                   }
-                   sudoku.appendChild(tr);
-                }
-                function getGrid() {
-                   let arr=[];
-                   [...sudoku.rows].forEach((row,r)=> {
-                      arr[r]=[];
-                      [...row.cells].forEach((cell,c)=>{
-                          arr[r][c]= cell.innerText!=''? Number(cell.innerText) :
-                             (cell.firstChild && cell.firstChild.value? Number(cell.firstChild.value): 0 );
-                      });
-                   });
-                   return arr;
-                }
-                function valid(grid) {
-                    // rows, cols, boxes
-                    for(let i=0;i<9;i++) {
-                      let row=new Set(),col=new Set(),box=new Set();
-                      for(let j=0;j<9;j++) {
-                        let r=grid[i][j], c=grid[j][i];
-                        if(r) { if(row.has(r)) return false; row.add(r);}
-                        if(c) { if(col.has(c)) return false; col.add(c);}
-                        // 3x3 box
-                        let rb = 3*Math.floor(i/3)+Math.floor(j/3), cb = 3*(i%3) + (j%3);
-                        let b = grid[rb][cb];
-                        if(b) { if(box.has(b)) return false; box.add(b);}
-                      }
-                    }
-                    return true;
-                }
-                document.getElementById('sudokuForm').onsubmit= function(e) {
-                    e.preventDefault();
-                    let arr = getGrid();
-                    let filled = arr.flat().every(Number);
-                    document.getElementById('msg').innerText =
-                        !filled ? 'Complete all cells!' :
-                        valid(arr)? '✓ Sudoku Solved!' : '✗ Solution is Incorrect.';
-                }
-            </script>
-        </body>
-        </html>
-    "></iframe>
-    <script>
-        // For navbar active highlighting
-        document.querySelectorAll('.nav-item').forEach(link => {
-            if(location.pathname.endsWith(link.getAttribute('href'))) {
-                link.classList.add('active');
+    <div id="message"></div>
+    <a href="index.html" class="back">← Back to Dashboard</a>
+<script>
+const puzzle = [
+    [5,3,"",  "",7,"",  "","", ""],
+    [6,"","",  1,9,5,   "","", ""],
+    ["",9,8,  "","", "",  "","", ""],
+    [8,"","",  "","", "",  "","", 3],
+    [4,"","",  8,"",3,   "","", 1],
+    [7,"","",  "","", "",  "","", 6],
+    ["",6,"",  "","", "",  2,8, ""],
+    ["","", "",  4,1,9,   "","", 5],
+    ["","", "",  "","", "",  "","", 9]
+];
+const solution = [
+    [5,3,4,6,7,8,9,1,2],
+    [6,7,2,1,9,5,3,4,8],
+    [1,9,8,3,4,2,5,6,7],
+    [8,5,9,7,6,1,4,2,3],
+    [4,2,6,8,5,3,7,9,1],
+    [7,1,3,9,2,4,8,5,6],
+    [9,6,1,5,3,7,2,8,4],
+    [2,8,7,4,1,9,6,3,5],
+    [3,4,5,2,8,6,1,7,9]
+];
+
+function createSudoku() {
+    const board = document.getElementById('sudokuBoard'); board.innerHTML = '';
+    for (let row=0; row<9; row++) {
+        for (let col=0; col<9; col++) {
+            let cell = document.createElement('input');
+            cell.type = 'text';
+            cell.maxLength = 1;
+            cell.className = 'cell';
+            if ((col+1)%3 === 0 && col < 8) cell.classList.add('block-right');
+            if ((row+1)%3 === 0 && row < 8) cell.classList.add('block-bottom');
+            if (puzzle[row][col] !== "") {
+                cell.value = puzzle[row][col];
+                cell.readOnly = true;
             } else {
-                link.classList.remove('active');
-            }
-        });
-        // Game Upload for HTML: local preview
-        const fileInput = document.getElementById('customGameFile');
-        const fileNameSpan = document.getElementById('gameFileName');
-        const previewFrame = document.getElementById('gamePreview');
-        fileInput.addEventListener('change', function(e){
-            const file = e.target.files[0];
-            if (file) {
-                fileNameSpan.textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    previewFrame.srcdoc = evt.target.result;
+                cell.oninput = function(){
+                    this.value = this.value.replace(/[^1-9]/g,'');
                 };
-                reader.readAsText(file);
-            } else {
-                fileNameSpan.textContent = "No file chosen";
             }
-        });
-    </script>
+            cell.dataset.r = row; cell.dataset.c = col;
+            board.appendChild(cell);
+        }
+    }
+    document.getElementById('message').textContent = '';
+}
+function checkSudoku() {
+    let correct = true;
+    const cells = document.querySelectorAll('.cell:not([readonly])');
+    cells.forEach(e => {
+        const r = parseInt(e.dataset.r), c = parseInt(e.dataset.c);
+        let v = Number(e.value);
+        if (v !== solution[r][c]) correct = false;
+    });
+    const message = document.getElementById('message');
+    if (correct) {
+        message.innerHTML = `<span class="success">🎉 Correct! Sudoku Solved!</span>`;
+    } else {
+        message.innerHTML = `<span class="fail">There are mistakes. Try again.</span>`;
+    }
+}
+function restartSudoku() { createSudoku(); }
+createSudoku();
+</script>
 </body>
 </html>
