@@ -8,7 +8,6 @@
     <style>
         .board {
             display: grid;
-            /* Use fixed dimensions, so always 9x9 grid */
             grid-template-columns: repeat(9, 2em);
             grid-template-rows: repeat(9, 2em);
             gap: 0;
@@ -17,12 +16,21 @@
             border: 2px solid #444;
             box-shadow: 0 1px 10px #0001;
             margin: 0 auto;
+            width: max-content;
+            min-width: unset;
+            max-width: unset;
         }
         .cell {
-            width: 2em; height: 2em; text-align: center; vertical-align: middle;
-            border: 1px solid #bbb; background: #e4e4e6;
-            font-size: 1.25em; font-family: inherit;
-            user-select: none; cursor: pointer;
+            width: 2em;
+            height: 2em;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #bbb;
+            background: #e4e4e6;
+            font-size: 1.25em;
+            font-family: inherit;
+            user-select: none;
+            cursor: pointer;
             transition: background 0.13s, border 0.13s;
             padding: 0;
         }
@@ -56,7 +64,6 @@
 <header style="position:relative;">
     <h1>ClearCache</h1>
     <p class="tagline">Minimal digital workspace</p>
-    <!-- Theme toggle button -->
     <button id="theme-toggle" aria-label="Toggle light or dark theme"
         style="position: absolute; right: 2.2rem; top: 2.3rem; background: none; border: none; cursor: pointer; font-size: 1.75rem; color: var(--primary); transition: color 0.2s;">
         🌙
@@ -104,7 +111,7 @@ function newGame() {
 function drawBoard() {
     const boardDiv = document.getElementById('board');
     boardDiv.innerHTML = '';
-    // No dynamic grid-templates, always 9x9 by CSS!
+    // create exactly 9 rows x 9 cols
     for(let r=0; r<rows; r++) {
         for(let c=0; c<cols; c++) {
             const cell = document.createElement('button');
