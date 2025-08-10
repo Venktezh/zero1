@@ -21,14 +21,14 @@ nav { margin: 2.2rem auto 0 auto; display: flex; justify-content: center; }
 .nav-item.active, .nav-item:focus, .nav-item:hover { background: var(--primary); color: #fff; outline: none; border-color: var(--primary);}
 .center {text-align:center;}
 #mine-container { display: flex; flex-direction: column; align-items: center; margin: 1.5em 0 0 0; }
-#game-options { margin: 0 0 1.3em 0; display: flex; gap: 1em; align-items: center; justify-content: center; flex-wrap:wrap;}
+#game-options { margin: 0 0 1em 0; display: flex; gap: 1em; align-items: center; justify-content: center; flex-wrap:wrap;}
 .board { display: grid; gap:0; background: #cccccc; border-radius: 7px; border:2px solid #444; box-shadow: 0 1px 10px #0001;}
 .cell {
     width: 2em; height: 2em; text-align: center; vertical-align: middle;
     border: 1px solid #bbb; background: #e4e4e6;
     font-size: 1.25em; font-family: inherit;
     user-select: none; cursor: pointer;
-    transition: background 0.13s;
+    transition: background 0.13s, border 0.13s;
     padding: 0;
 }
 .cell.revealed {
@@ -45,6 +45,11 @@ nav { margin: 2.2rem auto 0 auto; display: flex; justify-content: center; }
 }
 .cell:disabled { cursor: default; }
 .cell.mine.revealed { color: #c0392b; }
+.cell.mine.exploded {
+    border: 3px solid red !important;
+    box-sizing: border-box;
+    background: #ffadad !important;
+}
 .num1 { color: #1a85e8;}
 .num2 { color: #3d990a;}
 .num3 { color: #e8a91a;}
@@ -60,7 +65,7 @@ nav { margin: 2.2rem auto 0 auto; display: flex; justify-content: center; }
     transition: background 0.15s;
 }
 .btn:active, .btn:focus, .btn:hover { background: #2980b9; }
-#status { margin-top: 1.07em; font-weight: 500; }
+#status { margin-top: 1.07em; font-weight: 500; min-height: 2em;}
 #mine-count { margin-left: 1.5em; font-weight: 700; color: #e2381a;}
 @media (max-width: 600px) {
     .nav-container { gap:0.45rem; flex-wrap:wrap;}
@@ -87,12 +92,7 @@ nav { margin: 2.2rem auto 0 auto; display: flex; justify-content: center; }
 <h2 class="center" style="margin-top:2em; color:#34495e;">Minesweeper</h2>
 <div id="mine-container">
     <div id="game-options">
-        <span>Level:</span>
-        <select id="difficulty">
-            <option value="easy">Easy (9x9, 10 mines)</option>
-            <option value="medium">Medium (16x16, 40 mines)</option>
-            <option value="hard">Hard (16x30, 99 mines)</option>
-        </select>
+        <span>Level: Easy (9x9, 10 mines)</span>
         <button class="btn" onclick="newGame()">New Game</button>
         <span id="mine-count"></span>
     </div>
@@ -168,10 +168,8 @@ function cellClick(e) {
     const r = +this.dataset.r, c = +this.dataset.c;
     if (!started) { placeMines(r, c); started = true; }
     if (flagged[r][c] || revealed[r][c]) return;
-    let didHitMine = reveal(r, c); // Now returns true if mine hit
-    if (!didHitMine) {
-        checkWin();
-    }
+    const hitMine = reveal(r, c);
+    if (!hitMine) checkWin();
 }
 
 function cellFlag(e) {
@@ -186,6 +184,7 @@ function cellFlag(e) {
     checkWin();
 }
 
+// Modified: reveal returns true if a mine was hit
 function reveal(r, c) {
     if (!valid(r, c) || flagged[r][c] || revealed[r][c]) return false;
     revealed[r][c] = true;
@@ -193,7 +192,7 @@ function reveal(r, c) {
     if (board[r][c] === 'M') {
         explodedCell = [r, c];
         endGame(false, r, c);
-        return true; // Hit a mine!
+        return true;
     }
     if (board[r][c] === 0) {
         for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++)
@@ -206,7 +205,7 @@ function updateCell(r, c) {
     const i = r*cols+c;
     const btn = document.getElementsByClassName('cell')[i];
     btn.disabled = revealed[r][c] || gameOver;
-    btn.className = 'cell'; // clear all
+    btn.className = 'cell';
     if (flagged[r][c] && !revealed[r][c]) {
         btn.classList.add('flagged');
         btn.textContent = "🚩";
@@ -252,7 +251,9 @@ function checkWin() {
         if (board[r][c]!='M' && !revealed[r][c]) win = false;
     if (win) endGame(true);
 }
+
 window.newGame = newGame;
 newGame();
-</script></body>
+</script>
+</body>
 </html>
