@@ -1,80 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Minesweeper | ClearCache Game</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-:root {
-    --primary: #34495e;
-    --secondary: #7f8c8d;
-    --accent: #3498db;
-    --accent-dark: #2980b9;
-}
-body { background: #f6f7f9; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin:0; }
-header { text-align: center; margin-top: 2.3rem; }
-header h1 { font-size: 2.3rem; font-weight: 600; color: var(--primary); margin-bottom: 0.25rem; }
-header .tagline { color: var(--secondary); font-size: 1.07rem; margin: 0; }
-nav { margin: 2.2rem auto 0 auto; display: flex; justify-content: center; }
-.nav-container { display: flex; gap: 1rem; }
-.nav-item { padding: 0.7rem 2.1rem; border: 1px solid #e3e8ee; border-radius: 0.6rem; background: #fff; color: var(--primary); text-decoration: none; font-weight: 500; transition: background 0.15s, color 0.15s;}
-.nav-item.active, .nav-item:focus, .nav-item:hover { background: var(--primary); color: #fff; outline: none; border-color: var(--primary);}
-.center {text-align:center;}
-#mine-container { display: flex; flex-direction: column; align-items: center; margin: 1.5em 0 0 0; }
-#game-options { margin: 0 0 1em 0; display: flex; gap: 1em; align-items: center; justify-content: center; flex-wrap:wrap;}
-.board { display: grid; gap:0; background: #cccccc; border-radius: 7px; border:2px solid #444; box-shadow: 0 1px 10px #0001;}
-.cell {
-    width: 2em; height: 2em; text-align: center; vertical-align: middle;
-    border: 1px solid #bbb; background: #e4e4e6;
-    font-size: 1.25em; font-family: inherit;
-    user-select: none; cursor: pointer;
-    transition: background 0.13s, border 0.13s;
-    padding: 0;
-}
-.cell.revealed {
-    background: #fafcff;
-    border-color: #aaa;
-    cursor: default;
-}
-.cell.mine {
-    background: #ecd6d8 !important;
-}
-.cell.flagged {
-    background: #f9f4c0;
-    color: #c0392b;
-}
-.cell:disabled { cursor: default; }
-.cell.mine.revealed { color: #c0392b; }
-.cell.mine.exploded {
-    border: 3px solid red !important;
-    box-sizing: border-box;
-    background: #ffadad !important;
-}
-.num1 { color: #1a85e8;}
-.num2 { color: #3d990a;}
-.num3 { color: #e8a91a;}
-.num4 { color: #e2381a;}
-.num5 { color: #425969;}
-.num6 { color: #8774e3;}
-.num7 { color: #bb1ae8;}
-.num8 { color: #13191d;}
-.btn {
-    background: #3498db; color: #fff; border: none; border-radius: .4em;
-    padding: .6em 1.6em; font-size: 1em; font-family: inherit;
-    cursor: pointer; margin: 0 .25em;
-    transition: background 0.15s;
-}
-.btn:active, .btn:focus, .btn:hover { background: #2980b9; }
-#status { margin-top: 1.07em; font-weight: 500; min-height: 2em;}
-#mine-count { margin-left: 1.5em; font-weight: 700; color: #e2381a;}
-@media (max-width: 600px) {
-    .nav-container { gap:0.45rem; flex-wrap:wrap;}
-    nav { margin-top: 1rem;}
-    header h1 { font-size: 1.4rem; }
-    .board { border-radius: 3px;}
-    .cell { width: 1.5em; height: 1.5em; }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearCache | Minesweeper</title>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        :root {
+            --primary: #34495e;
+            --secondary: #7f8c8d;
+            --accent: #3498db;
+            --accent-dark: #2980b9;
+        }
+        body {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: #f6f7f9;
+            margin: 0;
+        }
+        header {
+            text-align: center;
+            margin-top: 2.3rem;
+        }
+        header h1 {
+            font-size: 2.3rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+        header .tagline {
+            color: var(--secondary);
+            font-size: 1.07rem;
+            margin: 0;
+        }
+        nav {
+            margin: 2.2rem auto 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+        .nav-container {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-item {
+            padding: 0.7rem 2.1rem;
+            border: 1px solid #e3e8ee;
+            border-radius: 0.6rem;
+            background: #fff;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-item.active, .nav-item:focus, .nav-item:hover {
+            background: var(--primary);
+            color: #fff;
+            outline: none;
+            border-color: var(--primary);
+        }
+        .center {text-align: center;}
+        #mine-container { display: flex; flex-direction: column; align-items: center; margin: 1.5em 0 0 0; }
+        #game-options { margin: 0 0 1em 0; display: flex; gap: 1em; align-items: center; justify-content: center; flex-wrap:wrap;}
+        .board { display: grid; gap:0; background: #cccccc; border-radius: 7px; border:2px solid #444; box-shadow: 0 1px 10px #0001;}
+        .cell {
+            width: 2em; height: 2em; text-align: center; vertical-align: middle;
+            border: 1px solid #bbb; background: #e4e4e6;
+            font-size: 1.25em; font-family: inherit;
+            user-select: none; cursor: pointer;
+            transition: background 0.13s, border 0.13s;
+            padding: 0;
+        }
+        .cell.revealed { background: #fafcff; border-color: #aaa; cursor: default; }
+        .cell.mine { background: #ecd6d8 !important; }
+        .cell.flagged { background: #f9f4c0; color: #c0392b; }
+        .cell:disabled { cursor: default; }
+        .cell.mine.revealed { color: #c0392b; }
+        .cell.mine.exploded {
+            border: 3px solid red !important;
+            box-sizing: border-box;
+            background: #ffadad !important;
+        }
+        .num1 { color: #1a85e8;}
+        .num2 { color: #3d990a;}
+        .num3 { color: #e8a91a;}
+        .num4 { color: #e2381a;}
+        .num5 { color: #425969;}
+        .num6 { color: #8774e3;}
+        .num7 { color: #bb1ae8;}
+        .num8 { color: #13191d;}
+        .btn {
+            background: var(--accent); color: #fff; border: none; border-radius: .4em;
+            padding: .6em 1.6em; font-size: 1em; font-family: inherit;
+            cursor: pointer; margin: 0 .25em;
+            transition: background 0.15s;
+        }
+        .btn:active, .btn:focus, .btn:hover { background: var(--accent-dark); }
+        #status { margin-top: 1.07em; font-weight: 500; min-height: 2em;}
+        #mine-count { margin-left: 1.5em; font-weight: 700; color: #e2381a;}
+        @media (max-width: 600px) {
+            .nav-container { flex-wrap:wrap; gap:0.45rem; }
+            nav { margin-top: 1rem;}
+            header h1 { font-size: 1.4rem; }
+            .board { border-radius: 3px;}
+            .cell { width: 1.5em; height: 1.5em; }
+        }
+    </style>
 </head>
 <body>
 <header>
@@ -123,7 +152,6 @@ function newGame() {
     document.getElementById('mine-count').textContent = `💣 ${minesLeft}`;
     drawBoard();
 }
-
 function drawBoard() {
     const boardDiv = document.getElementById('board');
     boardDiv.innerHTML = '';
@@ -140,7 +168,6 @@ function drawBoard() {
         boardDiv.appendChild(cell);
     }
 }
-
 function placeMines(safeR, safeC) {
     let placed = 0;
     let safeCells = new Set();
@@ -161,7 +188,6 @@ function placeMines(safeR, safeC) {
         board[r][c] = cnt;
     }
 }
-
 function cellClick(e) {
     e.preventDefault();
     if (gameOver) return;
@@ -171,7 +197,6 @@ function cellClick(e) {
     const hitMine = reveal(r, c);
     if (!hitMine) checkWin();
 }
-
 function cellFlag(e) {
     e.preventDefault();
     if (gameOver) return;
@@ -183,8 +208,6 @@ function cellFlag(e) {
     document.getElementById('mine-count').textContent = `💣 ${mines - flagsUsed}`;
     checkWin();
 }
-
-// Modified: reveal returns true if a mine was hit
 function reveal(r, c) {
     if (!valid(r, c) || flagged[r][c] || revealed[r][c]) return false;
     revealed[r][c] = true;
@@ -200,7 +223,6 @@ function reveal(r, c) {
     }
     return false;
 }
-
 function updateCell(r, c) {
     const i = r*cols+c;
     const btn = document.getElementsByClassName('cell')[i];
@@ -225,9 +247,7 @@ function updateCell(r, c) {
         }
     }
 }
-
 function valid(r, c) { return r>=0 && c>=0 && r<rows && c<cols; }
-
 function endGame(won, explodedR=null, explodedC=null) {
     gameOver = true;
     for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) {
@@ -243,7 +263,6 @@ function endGame(won, explodedR=null, explodedC=null) {
         ? '<span style="color:#27ae60;font-weight:600;">🎉 Congratulations, you cleared the board!</span>'
         : '<span style="color:#e2381a;font-weight:600;">Oh you stepped on mine</span>';
 }
-
 function checkWin() {
     if (gameOver) return;
     let win = true;
@@ -251,7 +270,6 @@ function checkWin() {
         if (board[r][c]!='M' && !revealed[r][c]) win = false;
     if (win) endGame(true);
 }
-
 window.newGame = newGame;
 newGame();
 </script>
