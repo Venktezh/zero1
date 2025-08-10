@@ -1,4 +1,4 @@
-#minesweeper-root {
+#minesweeper-tab {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -41,3 +41,5 @@
 .num6 { color: #8774e3;}
 .num7 { color: #bb1ae8;}
 .num8 { color: #13191d;}
+.controls { text-align:center; margin: 1.2em;}
+#status { margin-bottom:1em;}
