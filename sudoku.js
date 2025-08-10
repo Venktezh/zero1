@@ -1,7 +1,6 @@
-// Sudoku root is #sudoku-root
-(function() {
-    const root = document.getElementById('sudoku-root');
-    root.innerHTML = `
+(function () {
+    const sudokuTab = document.getElementById('sudoku-tab');
+    sudokuTab.innerHTML = `
         <h2>Sudoku Game</h2>
         <div id="levelLabel" style="color:#3498db;text-align:center; font-size: 1.1em;margin-bottom:.7em;">Level <span id="level-num">1</span></div>
         <div class="sudoku-board" id="sudokuBoard"></div>
