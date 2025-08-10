@@ -2,109 +2,87 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>NSE Circulars - Live Fetch</title>
+<title>Latest NSE Circulars</title>
 <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
-    h1 { color: #2c3e50; }
-    .filters { margin-bottom: 20px; }
-    input, button { padding: 6px; margin-right: 6px; border-radius: 4px; border: 1px solid #ccc; }
-    button { cursor: pointer; background: #007bff; color: white; border: none; }
-    button:hover { background: #0056b3; }
-    .circular { background: white; padding: 10px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    a { color: #007bff; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    body { font-family: Arial, sans-serif; background: #f4f5f7; padding: 20px; }
+    h2 { color: #1a3c6e; }
+    input, button { padding: 5px; margin: 5px; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #1a3c6e; color: white; }
+    .error { color: red; }
 </style>
 </head>
 <body>
 
-<h1>Latest NSE Circulars</h1>
+<h2>Latest NSE Circulars</h2>
+<label>From: <input type="date" id="fromDate"></label>
+<label>To: <input type="date" id="toDate"></label>
+<input type="text" id="keyword" placeholder="Search keyword...">
+<button onclick="fetchCirculars()">Search</button>
 
-<div class="filters">
-    <label>From: <input type="date" id="fromDate"></label>
-    <label>To: <input type="date" id="toDate"></label>
-    <input type="text" id="keyword" placeholder="Search keyword...">
-    <button onclick="fetchCirculars()">Search</button>
-</div>
+<p id="error" class="error"></p>
+<table id="circularTable">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Link</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
 
-<div id="circulars">Loading...</div>
-
-<!-- PapaParse for CSV parsing -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
-function formatDateForAPI(date) {
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
+const API_URL = 'http://localhost:3000/api/circulars';
+
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
 }
 
-function setDefaultDates() {
-    const today = new Date();
-    const past7 = new Date();
-    past7.setDate(today.getDate() - 7);
+async function fetchCirculars() {
+    document.getElementById('error').textContent = '';
+    const from = document.getElementById('fromDate').value;
+    const to = document.getElementById('toDate').value;
+    const keyword = document.getElementById('keyword').value;
 
-    document.getElementById("fromDate").value = past7.toISOString().split("T")[0];
-    document.getElementById("toDate").value = today.toISOString().split("T")[0];
-}
+    try {
+        const res = await fetch(`${API_URL}?from=${from}&to=${to}&keyword=${encodeURIComponent(keyword)}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
 
-function fetchCirculars() {
-    const fromDate = document.getElementById("fromDate").value;
-    const toDate = document.getElementById("toDate").value;
-    const keyword = document.getElementById("keyword").value.toLowerCase();
+        const tbody = document.querySelector('#circularTable tbody');
+        tbody.innerHTML = '';
 
-    const apiUrl = `https://www.nseindia.com/api/circulars?&fromDate=${formatDateForAPI(fromDate)}&toDate=${formatDateForAPI(toDate)}&csv=true`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
-
-    document.getElementById("circulars").innerHTML = "Loading...";
-
-    fetch(proxyUrl)
-      .then(res => {
-          if (!res.ok) throw new Error("Failed to fetch");
-          return res.text();
-      })
-      .then(csvText => {
-          const results = Papa.parse(csvText, { header: true });
-          displayCirculars(results.data, keyword);
-      })
-      .catch(err => {
-          document.getElementById("circulars").innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
-      });
-}
-
-function displayCirculars(data, keyword) {
-    const container = document.getElementById("circulars");
-    container.innerHTML = "";
-
-    const filteredData = data.filter(row => {
-        if (!row.DATE || !row.LINK) return false;
-        const text = `${row.SUBJECT} ${row.DEPARTMENT}`.toLowerCase();
-        return keyword === "" || text.includes(keyword);
-    });
-
-    if (filteredData.length === 0) {
-        container.innerHTML = "<p>No results found.</p>";
-        return;
+        if (data && data.data && data.data.length > 0) {
+            data.data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.subject}</td>
+                    <td><a href="${item.pdfLink}" target="_blank">PDF</a></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="3">No circulars found</td></tr>';
+        }
+    } catch (err) {
+        document.getElementById('error').textContent = 'Error: ' + err.message;
     }
-
-    filteredData.forEach(row => {
-        let summary = `${row.SUBJECT} - Department: ${row.DEPARTMENT}`;
-        if (summary.length > 160) summary = summary.slice(0, 157) + "...";
-
-        const item = document.createElement("div");
-        item.className = "circular";
-        item.innerHTML = `
-            <strong>${row.DATE}</strong> - <em>${row.DEPARTMENT}</em><br>
-            <p>${summary}</p>
-            <a href="${row.LINK}" target="_blank">📥 Download (${row["FILE SIZE"] || "File"})</a>
-        `;
-        container.appendChild(item);
-    });
 }
 
-// On load
-setDefaultDates();
-fetchCirculars();
+// Auto-load last 7 days data
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+
+    document.getElementById('fromDate').value = formatDate(lastWeek);
+    document.getElementById('toDate').value = formatDate(today);
+
+    fetchCirculars();
+});
 </script>
 
 </body>
