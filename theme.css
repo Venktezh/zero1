@@ -7,7 +7,11 @@
     --box-bg: #f4f8fa;
     --shadow: 0 12px 36px 0 rgba(44, 62, 80, 0.09);
     --bg-main: #f6f7f9;
+    --nav-bg: #fff;
+    --nav-active-bg: var(--primary);
+    --nav-active-text: #fff;
 }
+
 [data-theme="dark"] {
     --primary: #dadfe6;
     --secondary: #b9bbc1;
@@ -17,16 +21,22 @@
     --box-bg: #23262d;
     --shadow: 0 12px 36px 0 rgba(0,0,0,0.23);
     --bg-main: #181a20;
+    --nav-bg: #23262d;
+    --nav-active-bg: #46aaff;
+    --nav-active-text: #181a20;
 }
+
 body {
     font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
     background: var(--bg-main);
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s;
     margin: 0;
+    color: var(--primary);
 }
 header {
     text-align: center;
     margin-top: 2.3rem;
+    position: relative;
 }
 header h1 {
     font-size: 2.3rem;
@@ -52,18 +62,27 @@ nav {
     padding: 0.7rem 2.1rem;
     border: 1px solid #e3e8ee;
     border-radius: 0.6rem;
-    background: #fff;
+    background: var(--nav-bg);
     color: var(--primary);
     text-decoration: none;
     font-weight: 500;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
+
 .nav-item.active, .nav-item:focus, .nav-item:hover {
-    background: var(--primary);
-    color: #fff;
+    background: var(--nav-active-bg);
+    color: var(--nav-active-text);
     outline: none;
-    border-color: var(--primary);
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px 0 rgba(44,62,80,0.13);
 }
+
+/* Dark mode nav items (inactive) */
+[data-theme="dark"] .nav-item {
+    border-color: #393c47;
+}
+
+/* Main structure */
 main.dashboard {
     width: 100%;
     max-width: 1120px;
@@ -196,6 +215,7 @@ footer {
     padding: 1.2rem 0 1rem 0;
 }
 .center {text-align:center;}
+
 /* --- Minesweeper --- */
 .board { display: grid; gap:0; background: #cccccc; border-radius: 7px; border:2px solid #444; box-shadow: 0 1px 10px #0001;}
 .cell {
@@ -220,6 +240,7 @@ footer {
 .num6 { color: #8774e3;}
 .num7 { color: #bb1ae8;}
 .num8 { color: #13191d;}
+
 /* Responsive */
 @media (max-width: 980px) {
     main.dashboard {
