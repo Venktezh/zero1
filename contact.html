@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearCache | Contact</title>
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<header style="position:relative;">
+    <h1>ClearCache</h1>
+    <p class="tagline">Minimal digital workspace</p>
+    <button id="theme-toggle" aria-label="Toggle light or dark theme"
+        style="position: absolute; right: 2.2rem; top: 2.3rem; background: none; border: none; cursor: pointer; font-size: 1.75rem; color: var(--primary); transition: color 0.2s;">
+        🌙
+    </button>
+</header>
+<nav aria-label="Main navigation">
+    <div class="nav-container">
+        <a href="index.html" class="nav-item">Home</a>
+        <a href="about.html" class="nav-item">About</a>
+        <a href="contact.html" class="nav-item active">Contact</a>
+        <a href="game.html" class="nav-item">Game</a>
+    </div>
+</nav>
+<main class="dashboard">
+    <div style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:40vh;">
+        <h2 style="color:var(--primary); font-size:2.6rem; margin-top:3em;">Coming Soon</h2>
+        <p style="color:var(--secondary); font-size:1.25rem; margin-top:1.5em;">
+            This page is under construction.<br>
+            Stay tuned for updates!
+        </p>
+    </div>
+</main>
+<footer>
+    <p>© ClearCache <span id="year"></span> | Venktezh</p>
+</footer>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    (function() {
+        function getPreferredTheme() {
+            const stored = localStorage.getItem('theme');
+            if (stored) return stored;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            document.getElementById('theme-toggle').innerHTML = theme === "dark" ? "🌞" : "🌙";
+            document.getElementById('theme-toggle').setAttribute('aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const button = document.getElementById('theme-toggle');
+            if (!button) return;
+            let curTheme = getPreferredTheme();
+            setTheme(curTheme);
+            button.onclick = function() {
+                curTheme = (curTheme === "dark" ? "light" : "dark");
+                setTheme(curTheme);
+            };
+        });
+    })();
+</script>
+</body>
+</html>
