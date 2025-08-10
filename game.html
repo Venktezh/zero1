@@ -2,22 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sudoku | ClearCache Game</title>
+    <title>ClearCache | Games</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Use the shared theme.css -->
     <link rel="stylesheet" href="theme.css">
     <style>
-        .sudoku-board {
-            display: grid; grid-template-columns: repeat(9, 2.3em); grid-template-rows: repeat(9, 2.3em);
-            gap: 2px; justify-content: center; margin: 2em auto 1em auto; width: fit-content;
+        .game-tabs {
+            text-align:center;
+            margin-top: 2em;
+            margin-bottom: 2.2em;
+        }
+        .game-tab-btn {
+            background: var(--box-bg, #f4f8fa);
+            color: var(--primary, #34495e);
+            border: 1.7px solid var(--accent, #3498db);
+            border-radius: 0.6em 0.6em 0 0;
+            font-size: 1.14em;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0 .15em;
+            padding: .5em 2.2em;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
+            outline: none;
+        }
+        .game-tab-btn.active, .game-tab-btn:focus {
+            background: var(--accent, #3498db);
+            color: #fff;
+            border-color: var(--accent-dark, #2980b9);
+            z-index:2;
+        }
+        .game-tab-content { display: none; }
+        .game-tab-content.active { display: block; }
+        /* --- Minesweeper board --- */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(9, 2em);
+            grid-template-rows: repeat(9, 2em);
+            gap: 0;
+            background: #cccccc;
+            border-radius: 7px;
+            border: 2px solid #444;
+            box-shadow: 0 1px 10px #0001;
+            margin: 0 auto;
+            width: max-content;
         }
         .cell {
+            width: 2em; height: 2em;
+            text-align: center; vertical-align: middle;
+            border: 1px solid #bbb;
+            background: #e4e4e6;
+            font-size: 1.25em;
+            font-family: inherit;
+            user-select: none;
+            cursor: pointer;
+            transition: background 0.13s, border 0.13s;
+            padding: 0;
+        }
+        .cell.revealed { background: #fafcff; border-color: #aaa; cursor: default; }
+        .cell.mine { background: #ecd6d8 !important; }
+        .cell.flagged { background: #f9f4c0; color: #c0392b; }
+        .cell:disabled { cursor: default; }
+        .cell.mine.revealed { color: #c0392b; }
+        .cell.mine.exploded { border: 3px solid red !important; box-sizing: border-box; background: #ffadad !important;}
+        .num1 { color: #1a85e8;}
+        .num2 { color: #3d990a;}
+        .num3 { color: #e8a91a;}
+        .num4 { color: #e2381a;}
+        .num5 { color: #425969;}
+        .num6 { color: #8774e3;}
+        .num7 { color: #bb1ae8;}
+        .num8 { color: #13191d;}
+        /* --- Sudoku --- */
+        .sudoku-board {
+            display: grid;
+            grid-template-columns: repeat(9, 2.3em);
+            grid-template-rows: repeat(9, 2.3em);
+            gap: 2px;
+            justify-content: center;
+            margin: 2em auto 1em auto;
+            width: fit-content;
+        }
+        .cell-sudoku {
             background: #fff; border: 1px solid #bbb; font-size: 1.2em; text-align: center; outline: none;
         }
-        .cell:focus { border-color: #2980b9; }
-        .cell[readonly] { background: #ecf0f1; color: #34495e; font-weight: bold; }
-        .cell.block-right { border-right: 3px solid #34495e;}
-        .cell.block-bottom { border-bottom: 3px solid #34495e;}
+        .cell-sudoku:focus { border-color: #2980b9; }
+        .cell-sudoku[readonly] { background: #ecf0f1; color: #34495e; font-weight: bold; }
+        .cell-sudoku.block-right { border-right: 3px solid #34495e;}
+        .cell-sudoku.block-bottom { border-bottom: 3px solid #34495e;}
         .controls { text-align: center; margin: 2em 0; }
         .btn {
             background: var(--accent, #3498db); color: #fff; border: none; border-radius: .4em;
@@ -25,60 +96,90 @@
             cursor: pointer; margin: 0 .5em;
             transition: background 0.16s;
         }
-        .btn:hover { background: var(--accent-dark, #2980b9); }
-        #message { text-align:center; margin-top: 1em;font-size:1.10em;}
+        .btn:hover { background: var(--accent-dark, #2980b9);}
+        #message, #status { text-align:center; margin-top: 1em; font-size:1.10em;}
         .success { color: var(--success, #27ae60);}
         .fail { color: #c0392b;}
-        /* Correctness feedback */
-        .cell-correct {
-            background: #d4f9d2 !important;
-            border-color: #27ae60 !important;
-            transition: background 0.25s, border-color 0.25s;
-        }
-        .cell-wrong {
-            background: #ffeaea !important;
-            border-color: #c0392b !important;
-            transition: background 0.25s, border-color 0.25s;
-        }
-        @media (max-width: 700px) {
-            .sudoku-board { grid-template-columns: repeat(9, 1.6em); grid-template-rows: repeat(9, 1.6em);}
-            header h1 { font-size: 1.3rem; }
-            .nav-container { gap:0.45rem; }
-            .nav-item { padding:0.7rem 1rem; font-size:.97rem;}
+        .cell-correct { background: #d4f9d2 !important; border-color: #27ae60 !important; }
+        .cell-wrong { background: #ffeaea !important; border-color: #c0392b !important;}
+        #mine-count { margin-left: 1.5em; font-weight: 700; color: #e2381a;}
+        @media (max-width: 800px) {
+            .sudoku-board { grid-template-columns: repeat(9, 1.35em); grid-template-rows: repeat(9, 1.35em);}
+            .board { grid-template-columns: repeat(9, 1.35em); grid-template-rows: repeat(9, 1.35em);}
         }
     </style>
 </head>
 <body>
-    <header style="position:relative;">
-        <h1>ClearCache</h1>
-        <p class="tagline">Minimal digital workspace</p>
-        <!-- Theme toggle button (top-right, accessible) -->
-        <button id="theme-toggle" aria-label="Toggle light or dark theme"
-            style="position: absolute; right: 2.2rem; top: 2.3rem; background: none; border: none; cursor: pointer; font-size: 1.75rem; color: var(--primary); transition: color 0.2s;">
-            🌙
-        </button>
-    </header>
-    <nav aria-label="Main navigation">
-        <div class="nav-container">
-            <a href="index.html" class="nav-item">Home</a>
-            <a href="about.html" class="nav-item">About</a>
-            <a href="contact.html" class="nav-item">Contact</a>
-            <a href="game.html" class="nav-item active">Game</a>
-        </div>
-    </nav>
-    <h2 style="text-align:center;margin-top:2em;font-weight:600;color:var(--primary);">Sudoku Game</h2>
+<header style="position:relative;">
+    <h1>ClearCache</h1>
+    <p class="tagline">Minimal digital workspace</p>
+    <button id="theme-toggle" aria-label="Toggle light or dark theme"
+        style="position: absolute; right: 2.2rem; top: 2.3rem; background: none; border: none; cursor: pointer; font-size: 1.75rem; color: var(--primary); transition: color 0.2s;">
+        🌙
+    </button>
+</header>
+<nav aria-label="Main navigation">
+    <div class="nav-container">
+        <a href="index.html" class="nav-item">Home</a>
+        <a href="about.html" class="nav-item">About</a>
+        <a href="contact.html" class="nav-item">Contact</a>
+        <a href="game.html" class="nav-item active">Game</a>
+    </div>
+</nav>
+
+<div class="game-tabs">
+    <button class="game-tab-btn active" id="tab-sudoku" onclick="showGameTab('sudoku')">Sudoku</button>
+    <button class="game-tab-btn" id="tab-minesweeper" onclick="showGameTab('minesweeper')">Minesweeper</button>
+</div>
+
+<div id="sudoku-tab" class="game-tab-content active">
+    <h2 style="text-align:center;margin-top:0em;font-weight:600;color:var(--primary);">Sudoku Game</h2>
     <div id="levelLabel" style="color: var(--accent); text-align:center; font-size: 1.1em; margin-bottom: 0.7em;">
         Level <span id="level-num">1</span>
     </div>
     <div class="sudoku-board" id="sudokuBoard"></div>
-    <div class="controls">
+    <div class="controls" id="sudoku-controls">
         <button class="btn" onclick="checkSudoku()">Check</button>
         <button class="btn" onclick="restartSudoku()">Restart</button>
         <button class="btn" onclick="nextLevel()">Next Level</button>
     </div>
     <div id="message"></div>
+</div>
+
+<div id="minesweeper-tab" class="game-tab-content">
+    <h2 class="center" style="margin-top:0em; color:var(--primary);">Minesweeper</h2>
+    <div id="mine-container">
+        <div id="game-options" style="text-align:center;margin-bottom:1.2em;">
+            <span>Level: Easy (9x9, 10 mines)</span>
+            <button class="btn" onclick="newGame()">New Game</button>
+            <span id="mine-count"></span>
+        </div>
+        <div id="board-wrap">
+            <div id="board"></div>
+        </div>
+        <div id="status" class="center"></div>
+    </div>
+</div>
+
 <script>
+// ===== Tab Switcher =====
+function showGameTab(game) {
+    document.getElementById('sudoku-tab').classList.remove('active');
+    document.getElementById('minesweeper-tab').classList.remove('active');
+    document.getElementById('tab-sudoku').classList.remove('active');
+    document.getElementById('tab-minesweeper').classList.remove('active');
+    if (game === 'sudoku') {
+        document.getElementById('sudoku-tab').classList.add('active');
+        document.getElementById('tab-sudoku').classList.add('active');
+    } else {
+        document.getElementById('minesweeper-tab').classList.add('active');
+        document.getElementById('tab-minesweeper').classList.add('active');
+    }
+}
+
+// ===== SUDOKU =====
 let level = 1;
+let solution = [], puzzle = [];
 function generateSudokuSolution() {
     let board = [...Array(9)].map(()=>Array(9).fill(0));
     let rows = Array.from({length:9},()=>Array(10).fill(false));
@@ -128,7 +229,6 @@ function shuffle(arr) {
     }
     return arr;
 }
-let solution = [], puzzle = [];
 function createSudoku(levelIncrement = false) {
     if (levelIncrement) level++;
     document.getElementById('level-num').textContent = level;
@@ -143,7 +243,7 @@ function renderSudoku() {
             let cell = document.createElement('input');
             cell.type = 'text';
             cell.maxLength = 1;
-            cell.className = 'cell';
+            cell.className = 'cell-sudoku';
             if ((col+1)%3 === 0 && col < 8) cell.classList.add('block-right');
             if ((row+1)%3 === 0 && row < 8) cell.classList.add('block-bottom');
             if (puzzle[row][col] !== "") {
@@ -161,7 +261,7 @@ function renderSudoku() {
 }
 function checkSudoku() {
     let correct = true;
-    const cells = document.querySelectorAll('.cell:not([readonly])');
+    const cells = document.querySelectorAll('.cell-sudoku:not([readonly])');
     cells.forEach(e => {
         const r = parseInt(e.dataset.r), c = parseInt(e.dataset.c);
         let v = Number(e.value);
@@ -186,7 +286,141 @@ function restartSudoku() { renderSudoku(); }
 function nextLevel() { createSudoku(true); }
 createSudoku();
 
-// Theme toggle JS
+// === MINESWEEPER ===
+const rows = 9, cols = 9, mines = 10;
+let board = [], revealed = [], flagged = [];
+let gameOver = false, started = false, minesLeft = mines;
+let explodedCell = null;
+function newGame() {
+    board = Array.from({length: rows}, () => Array(cols).fill(0));
+    revealed = Array.from({length: rows}, () => Array(cols).fill(false));
+    flagged = Array.from({length: rows}, () => Array(cols).fill(false));
+    gameOver = false;
+    started = false;
+    minesLeft = mines;
+    explodedCell = null;
+    document.getElementById('status').innerHTML = '';
+    document.getElementById('mine-count').textContent = `💣 ${minesLeft}`;
+    drawBoard();
+}
+function drawBoard() {
+    const boardDiv = document.getElementById('board');
+    boardDiv.innerHTML = '';
+    for(let r=0; r<rows; r++) {
+        for(let c=0; c<cols; c++) {
+            const cell = document.createElement('button');
+            cell.className = 'cell';
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            cell.addEventListener('click', cellClick);
+            cell.addEventListener('contextmenu', cellFlag);
+            boardDiv.appendChild(cell);
+        }
+    }
+}
+function placeMines(safeR, safeC) {
+    let placed = 0;
+    let safeCells = new Set();
+    for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++)
+        if (valid(safeR+dr, safeC+dc)) safeCells.add(`${safeR+dr},${safeC+dc}`);
+    while (placed < mines) {
+        let r = Math.floor(Math.random() * rows), c = Math.floor(Math.random() * cols);
+        if (board[r][c] === 'M') continue;
+        if (safeCells.has(`${r},${c}`)) continue;
+        board[r][c] = 'M';
+        placed++;
+    }
+    for(let r=0; r<rows; r++) for(let c=0; c<cols; c++) {
+        if (board[r][c]=='M') continue;
+        let cnt = 0;
+        for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++)
+            if (valid(r+dr,c+dc) && board[r+dr][c+dc]=='M') cnt++;
+        board[r][c] = cnt;
+    }
+}
+function cellClick(e) {
+    e.preventDefault();
+    if (gameOver) return;
+    const r = +this.dataset.r, c = +this.dataset.c;
+    if (!started) { placeMines(r, c); started = true; }
+    if (flagged[r][c] || revealed[r][c]) return;
+    const hitMine = reveal(r, c);
+    if (!hitMine) checkWin();
+}
+function cellFlag(e) {
+    e.preventDefault();
+    if (gameOver) return;
+    const r = +this.dataset.r, c = +this.dataset.c;
+    if (revealed[r][c]) return;
+    flagged[r][c] = !flagged[r][c];
+    updateCell(r, c);
+    let flagsUsed = flagged.flat().filter(Boolean).length;
+    document.getElementById('mine-count').textContent = `💣 ${mines - flagsUsed}`;
+    checkWin();
+}
+function reveal(r, c) {
+    if (!valid(r, c) || flagged[r][c] || revealed[r][c]) return false;
+    revealed[r][c] = true;
+    updateCell(r, c);
+    if (board[r][c] === 'M') {
+        explodedCell = [r, c];
+        endGame(false, r, c);
+        return true;
+    }
+    if (board[r][c] === 0) {
+        for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++)
+            if (dr!==0||dc!==0) reveal(r+dr, c+dc);
+    }
+    return false;
+}
+function updateCell(r, c) {
+    const i = r*cols+c;
+    const btn = document.getElementsByClassName('cell')[i];
+    btn.disabled = revealed[r][c] || gameOver;
+    btn.className = 'cell';
+    if (flagged[r][c] && !revealed[r][c]) {
+        btn.classList.add('flagged');
+        btn.textContent = "🚩";
+        return;
+    }
+    if (revealed[r][c]) {
+        btn.classList.add('revealed');
+        if (board[r][c]=='M') {
+            btn.classList.add('mine');
+            btn.textContent = "💣";
+            if (explodedCell && explodedCell[0] === r && explodedCell[1] === c && gameOver) {
+                btn.classList.add('exploded');
+            }
+        } else if (board[r][c]>0) {
+            btn.textContent = board[r][c];
+            btn.classList.add('num' + board[r][c]);
+        }
+    }
+}
+function valid(r, c) { return r>=0 && c>=0 && r<rows && c<cols; }
+function endGame(won, explodedR=null, explodedC=null) {
+    gameOver = true;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) {
+        if (revealed[r][c] || (won && board[r][c] != 'M')) continue;
+        flagged[r][c] = (board[r][c]=='M');
+        revealed[r][c] = true;
+        updateCell(r, c);
+    }
+    if (!won && explodedR!=null && explodedC!=null) updateCell(explodedR, explodedC);
+    document.getElementById('status').innerHTML = won
+        ? '<span style="color:#27ae60;font-weight:600;">🎉 Congratulations, you cleared the board!</span>'
+        : '<span style="color:#e2381a;font-weight:600;">Oh you stepped on mine</span>';
+}
+function checkWin() {
+    if (gameOver) return;
+    let win = true;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++)
+        if (board[r][c]!='M' && !revealed[r][c]) win = false;
+    if (win) endGame(true);
+}
+window.newGame = newGame;
+newGame();
+// ========== THEME TOGGLE ==========
 (function() {
     function getPreferredTheme() {
         const stored = localStorage.getItem('theme');
