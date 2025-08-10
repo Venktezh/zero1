@@ -1,0 +1,43 @@
+#minesweeper-root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.board {
+    display: grid;
+    grid-template-columns: repeat(9, 2em);
+    grid-template-rows: repeat(9, 2em);
+    gap: 0;
+    background: #cccccc;
+    border-radius: 7px;
+    border: 2px solid #444;
+    box-shadow: 0 1px 10px #0001;
+    margin: 0 auto;
+    width: max-content;
+}
+.mine-cell {
+    width: 2em; height: 2em;
+    text-align: center; vertical-align: middle;
+    border: 1px solid #bbb;
+    background: #e4e4e6;
+    font-size: 1.25em;
+    font-family: inherit;
+    user-select: none;
+    cursor: pointer;
+    transition: background 0.13s, border 0.13s;
+    padding: 0;
+}
+.mine-cell.revealed { background: #fafcff; border-color: #aaa; cursor: default; }
+.mine-cell.mine { background: #ecd6d8 !important; }
+.mine-cell.flagged { background: #f9f4c0; color: #c0392b; }
+.mine-cell:disabled { cursor: default; }
+.mine-cell.mine.revealed { color: #c0392b; }
+.mine-cell.mine.exploded { border: 3px solid red !important; box-sizing: border-box; background: #ffadad !important;}
+.num1 { color: #1a85e8;}
+.num2 { color: #3d990a;}
+.num3 { color: #e8a91a;}
+.num4 { color: #e2381a;}
+.num5 { color: #425969;}
+.num6 { color: #8774e3;}
+.num7 { color: #bb1ae8;}
+.num8 { color: #13191d;}
