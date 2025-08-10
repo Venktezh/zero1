@@ -102,37 +102,29 @@ nav { margin: 2.2rem auto 0 auto; display: flex; justify-content: center; }
     <div id="status" class="center"></div>
 </div>
 <script>
-const levels = {
-    easy:   {rows: 9, cols: 9, mines: 10},
-    medium: {rows: 16, cols: 16, mines: 40},
-    hard:   {rows: 16, cols: 30, mines: 99}
-};
+const rows = 9, cols = 9, mines = 10;
 let board = [];
 let revealed = [];
 let flagged = [];
 let gameOver = false;
 let started = false;
-let minesLeft = 0;
-let config = {...levels.easy};
-let rows = 9, cols = 9, mines = 10;
+let minesLeft = mines;
+let explodedCell = null;
 
 function newGame() {
-    // Get settings
-    config = levels[document.getElementById('difficulty').value];
-    rows = config.rows; cols = config.cols; mines = config.mines;
-    // Clear
     board = Array.from({length: rows}, () => Array(cols).fill(0));
     revealed = Array.from({length: rows}, () => Array(cols).fill(false));
     flagged = Array.from({length: rows}, () => Array(cols).fill(false));
     gameOver = false;
     started = false;
     minesLeft = mines;
-    document.getElementById('status').textContent = '';
+    explodedCell = null;
+    document.getElementById('status').innerHTML = '';
     document.getElementById('mine-count').textContent = `💣 ${minesLeft}`;
     drawBoard();
 }
+
 function drawBoard() {
-    const wrap = document.getElementById('board-wrap');
     const boardDiv = document.getElementById('board');
     boardDiv.innerHTML = '';
     boardDiv.className = 'board';
@@ -148,20 +140,19 @@ function drawBoard() {
         boardDiv.appendChild(cell);
     }
 }
+
 function placeMines(safeR, safeC) {
     let placed = 0;
     let safeCells = new Set();
-    // Don't put mine in first open cell or neighbors
     for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++)
         if (valid(safeR+dr, safeC+dc)) safeCells.add(`${safeR+dr},${safeC+dc}`);
     while (placed < mines) {
         let r = Math.floor(Math.random() * rows), c = Math.floor(Math.random() * cols);
         if (board[r][c] === 'M') continue;
-        if (safeCells.has(`${r},${c}`)) continue; // So first click is always safe
+        if (safeCells.has(`${r},${c}`)) continue;
         board[r][c] = 'M';
         placed++;
     }
-    // Fill numbers
     for(let r=0; r<rows; r++) for(let c=0; c<cols; c++) {
         if (board[r][c]=='M') continue;
         let cnt = 0;
@@ -170,15 +161,19 @@ function placeMines(safeR, safeC) {
         board[r][c] = cnt;
     }
 }
+
 function cellClick(e) {
     e.preventDefault();
     if (gameOver) return;
     const r = +this.dataset.r, c = +this.dataset.c;
     if (!started) { placeMines(r, c); started = true; }
     if (flagged[r][c] || revealed[r][c]) return;
-    reveal(r,c);
-    checkWin();
+    let didHitMine = reveal(r, c); // Now returns true if mine hit
+    if (!didHitMine) {
+        checkWin();
+    }
 }
+
 function cellFlag(e) {
     e.preventDefault();
     if (gameOver) return;
@@ -186,31 +181,32 @@ function cellFlag(e) {
     if (revealed[r][c]) return;
     flagged[r][c] = !flagged[r][c];
     updateCell(r, c);
-    // Update mine count
     let flagsUsed = flagged.flat().filter(Boolean).length;
-    document.getElementById('mine-count').textContent = `💣 ${minesLeft - flagsUsed}`;
+    document.getElementById('mine-count').textContent = `💣 ${mines - flagsUsed}`;
     checkWin();
 }
+
 function reveal(r, c) {
-    if (!valid(r, c) || flagged[r][c] || revealed[r][c]) return;
+    if (!valid(r, c) || flagged[r][c] || revealed[r][c]) return false;
     revealed[r][c] = true;
     updateCell(r, c);
     if (board[r][c] === 'M') {
+        explodedCell = [r, c];
         endGame(false, r, c);
-        return;
+        return true; // Hit a mine!
     }
-    // If zero, flood fill
     if (board[r][c] === 0) {
         for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++)
             if (dr!==0||dc!==0) reveal(r+dr, c+dc);
     }
+    return false;
 }
+
 function updateCell(r, c) {
     const i = r*cols+c;
     const btn = document.getElementsByClassName('cell')[i];
     btn.disabled = revealed[r][c] || gameOver;
-    btn.classList.remove('revealed','mine','flagged','num1','num2','num3','num4','num5','num6','num7','num8');
-    btn.textContent = '';
+    btn.className = 'cell'; // clear all
     if (flagged[r][c] && !revealed[r][c]) {
         btn.classList.add('flagged');
         btn.textContent = "🚩";
@@ -221,13 +217,18 @@ function updateCell(r, c) {
         if (board[r][c]=='M') {
             btn.classList.add('mine');
             btn.textContent = "💣";
+            if (explodedCell && explodedCell[0] === r && explodedCell[1] === c && gameOver) {
+                btn.classList.add('exploded');
+            }
         } else if (board[r][c]>0) {
             btn.textContent = board[r][c];
             btn.classList.add('num' + board[r][c]);
         }
     }
 }
+
 function valid(r, c) { return r>=0 && c>=0 && r<rows && c<cols; }
+
 function endGame(won, explodedR=null, explodedC=null) {
     gameOver = true;
     for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) {
@@ -237,25 +238,21 @@ function endGame(won, explodedR=null, explodedC=null) {
         updateCell(r, c);
     }
     if (!won && explodedR!=null && explodedC!=null) {
-        document.getElementsByClassName('cell')[explodedR*cols+explodedC].style.background='#ffadad';
+        updateCell(explodedR, explodedC);
     }
-    document.getElementById('status').textContent = won ? "🎉 You cleared the board! Start new game for next level." : "💥 Game Over! Try new game for another level.";
+    document.getElementById('status').innerHTML = won
+        ? '<span style="color:#27ae60;font-weight:600;">🎉 Congratulations, you cleared the board!</span>'
+        : '<span style="color:#e2381a;font-weight:600;">Oh you stepped on mine</span>';
 }
+
 function checkWin() {
-    // Win if all non-mine cells are revealed
+    if (gameOver) return;
     let win = true;
     for(let r=0;r<rows;r++) for(let c=0;c<cols;c++)
         if (board[r][c]!='M' && !revealed[r][c]) win = false;
     if (win) endGame(true);
 }
-// Redraw all cells
-function redrawAll() {
-    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) updateCell(r,c);
-}
-document.getElementById('difficulty').addEventListener('change', newGame);
-window.newGame = newGame; // for button
-// On load
+window.newGame = newGame;
 newGame();
-</script>
-</body>
+</script></body>
 </html>
