@@ -4,25 +4,9 @@
     <meta charset="UTF-8">
     <title>Sudoku | ClearCache Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Use the shared theme.css -->
+    <link rel="stylesheet" href="theme.css">
     <style>
-        :root {
-            --primary: #34495e; --secondary: #7f8c8d;
-            --accent: #3498db; --accent-dark: #2980b9;
-        }
-        body { background: #f6f7f9; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin:0; }
-        header { text-align: center; margin-top: 2.3rem; }
-        header h1 { font-size: 2.3rem; font-weight: 600; color: var(--primary); margin-bottom: 0.25rem; }
-        header .tagline { color: var(--secondary); font-size: 1.07rem; margin: 0; }
-        nav { margin: 2.2rem auto 0 auto; display: flex; justify-content: center; }
-        .nav-container { display: flex; gap: 1rem; }
-        .nav-item {
-            padding: 0.7rem 2.1rem; border: 1px solid #e3e8ee; border-radius: 0.6rem; background: #fff;
-            color: var(--primary); text-decoration: none; font-weight: 500;
-            transition: background 0.15s, color 0.15s;
-        }
-        .nav-item.active, .nav-item:focus, .nav-item:hover {
-            background: var(--primary); color: #fff; outline: none; border-color: var(--primary);
-        }
         .sudoku-board {
             display: grid; grid-template-columns: repeat(9, 2.3em); grid-template-rows: repeat(9, 2.3em);
             gap: 2px; justify-content: center; margin: 2em auto 1em auto; width: fit-content;
@@ -36,15 +20,15 @@
         .cell.block-bottom { border-bottom: 3px solid #34495e;}
         .controls { text-align: center; margin: 2em 0; }
         .btn {
-            background: #3498db; color: #fff; border: none; border-radius: .4em;
+            background: var(--accent, #3498db); color: #fff; border: none; border-radius: .4em;
             padding: .6em 1.8em; font-size: 1em; font-family: inherit;
             cursor: pointer; margin: 0 .5em;
+            transition: background 0.16s;
         }
-        .btn:hover { background: #2980b9; }
+        .btn:hover { background: var(--accent-dark, #2980b9); }
         #message { text-align:center; margin-top: 1em;font-size:1.10em;}
-        .success { color: #27ae60}
-        .fail { color: #c0392b}
-
+        .success { color: var(--success, #27ae60);}
+        .fail { color: #c0392b;}
         /* Correctness feedback */
         .cell-correct {
             background: #d4f9d2 !important;
@@ -56,7 +40,6 @@
             border-color: #c0392b !important;
             transition: background 0.25s, border-color 0.25s;
         }
-
         @media (max-width: 700px) {
             .sudoku-board { grid-template-columns: repeat(9, 1.6em); grid-template-rows: repeat(9, 1.6em);}
             header h1 { font-size: 1.3rem; }
@@ -66,9 +49,14 @@
     </style>
 </head>
 <body>
-    <header>
+    <header style="position:relative;">
         <h1>ClearCache</h1>
         <p class="tagline">Minimal digital workspace</p>
+        <!-- Theme toggle button (top-right, accessible) -->
+        <button id="theme-toggle" aria-label="Toggle light or dark theme"
+            style="position: absolute; right: 2.2rem; top: 2.3rem; background: none; border: none; cursor: pointer; font-size: 1.75rem; color: var(--primary); transition: color 0.2s;">
+            🌙
+        </button>
     </header>
     <nav aria-label="Main navigation">
         <div class="nav-container">
@@ -78,8 +66,8 @@
             <a href="game.html" class="nav-item active">Game</a>
         </div>
     </nav>
-    <h2 style="text-align:center;margin-top:2em;font-weight:600;color:#34495e;">Sudoku Game</h2>
-    <div id="levelLabel" style="color: #3498db; text-align:center; font-size: 1.1em; margin-bottom: 0.7em;">
+    <h2 style="text-align:center;margin-top:2em;font-weight:600;color:var(--primary);">Sudoku Game</h2>
+    <div id="levelLabel" style="color: var(--accent); text-align:center; font-size: 1.1em; margin-bottom: 0.7em;">
         Level <span id="level-num">1</span>
     </div>
     <div class="sudoku-board" id="sudokuBoard"></div>
@@ -144,7 +132,6 @@ let solution = [], puzzle = [];
 function createSudoku(levelIncrement = false) {
     if (levelIncrement) level++;
     document.getElementById('level-num').textContent = level;
-
     solution = generateSudokuSolution();
     puzzle = makeEasyPuzzle(solution);
     renderSudoku();
@@ -198,6 +185,31 @@ function checkSudoku() {
 function restartSudoku() { renderSudoku(); }
 function nextLevel() { createSudoku(true); }
 createSudoku();
+
+// Theme toggle JS
+(function() {
+    function getPreferredTheme() {
+        const stored = localStorage.getItem('theme');
+        if (stored) return stored;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        document.getElementById('theme-toggle').innerHTML = theme === "dark" ? "🌞" : "🌙";
+        document.getElementById('theme-toggle').setAttribute('aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const button = document.getElementById('theme-toggle');
+        if (!button) return;
+        let curTheme = getPreferredTheme();
+        setTheme(curTheme);
+        button.onclick = function() {
+            curTheme = (curTheme === "dark" ? "light" : "dark");
+            setTheme(curTheme);
+        };
+    });
+})();
 </script>
 </body>
 </html>
