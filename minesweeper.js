@@ -1,5 +1,5 @@
 (function() {
-const root = document.getElementById('minesweeper-root');
+const root = document.getElementById('minesweeper-tab');
 root.innerHTML = `
     <h2 class="center" style="margin-top:0em; color:var(--primary);">Minesweeper</h2>
     <div id="mine-container">
