@@ -1,65 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClearCache | Contact</title>
-    <link rel="stylesheet" href="theme.css">
+<meta charset="UTF-8">
+<title>NSE Circulars - Live Fetch</title>
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+    h1 { color: #2c3e50; }
+    .filters { margin-bottom: 20px; }
+    input, button { padding: 6px; margin-right: 6px; border-radius: 4px; border: 1px solid #ccc; }
+    button { cursor: pointer; background: #007bff; color: white; border: none; }
+    button:hover { background: #0056b3; }
+    .circular { background: white; padding: 10px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    a { color: #007bff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+</style>
 </head>
 <body>
-<header style="position:relative;">
-    <h1>ClearCache</h1>
-    <p class="tagline">Minimal digital workspace</p>
-    <button id="theme-toggle" aria-label="Toggle light or dark theme"
-        style="position: absolute; right: 2.2rem; top: 2.3rem; background: none; border: none; cursor: pointer; font-size: 1.75rem; color: var(--primary); transition: color 0.2s;">
-        🌙
-    </button>
-</header>
-<nav aria-label="Main navigation">
-    <div class="nav-container">
-        <a href="index.html" class="nav-item">Home</a>
-        <a href="about.html" class="nav-item">About</a>
-        <a href="contact.html" class="nav-item active">Contact</a>
-        <a href="game.html" class="nav-item">Game</a>
-    </div>
-</nav>
-<main class="dashboard">
-    <div style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:40vh;">
-        <h2 style="color:var(--primary); font-size:2.6rem; margin-top:3em;">Coming Soon</h2>
-        <p style="color:var(--secondary); font-size:1.25rem; margin-top:1.5em;">
-            This page is under construction.<br>
-            Stay tuned for updates!
-        </p>
-    </div>
-</main>
-<footer>
-    <p>© ClearCache <span id="year"></span> | Venktezh</p>
-</footer>
+
+<h1>Latest NSE Circulars</h1>
+
+<div class="filters">
+    <label>From: <input type="date" id="fromDate"></label>
+    <label>To: <input type="date" id="toDate"></label>
+    <input type="text" id="keyword" placeholder="Search keyword...">
+    <button onclick="fetchCirculars()">Search</button>
+</div>
+
+<div id="circulars">Loading...</div>
+
+<!-- PapaParse for CSV parsing -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    (function() {
-        function getPreferredTheme() {
-            const stored = localStorage.getItem('theme');
-            if (stored) return stored;
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            document.getElementById('theme-toggle').innerHTML = theme === "dark" ? "🌞" : "🌙";
-            document.getElementById('theme-toggle').setAttribute('aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            const button = document.getElementById('theme-toggle');
-            if (!button) return;
-            let curTheme = getPreferredTheme();
-            setTheme(curTheme);
-            button.onclick = function() {
-                curTheme = (curTheme === "dark" ? "light" : "dark");
-                setTheme(curTheme);
-            };
-        });
-    })();
+function formatDateForAPI(date) {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
+function setDefaultDates() {
+    const today = new Date();
+    const past7 = new Date();
+    past7.setDate(today.getDate() - 7);
+
+    document.getElementById("fromDate").value = past7.toISOString().split("T")[0];
+    document.getElementById("toDate").value = today.toISOString().split("T")[0];
+}
+
+function fetchCirculars() {
+    const fromDate = document.getElementById("fromDate").value;
+    const toDate = document.getElementById("toDate").value;
+    const keyword = document.getElementById("keyword").value.toLowerCase();
+
+    const apiUrl = `https://www.nseindia.com/api/circulars?&fromDate=${formatDateForAPI(fromDate)}&toDate=${formatDateForAPI(toDate)}&csv=true`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+
+    document.getElementById("circulars").innerHTML = "Loading...";
+
+    fetch(proxyUrl)
+      .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch");
+          return res.text();
+      })
+      .then(csvText => {
+          const results = Papa.parse(csvText, { header: true });
+          displayCirculars(results.data, keyword);
+      })
+      .catch(err => {
+          document.getElementById("circulars").innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      });
+}
+
+function displayCirculars(data, keyword) {
+    const container = document.getElementById("circulars");
+    container.innerHTML = "";
+
+    const filteredData = data.filter(row => {
+        if (!row.DATE || !row.LINK) return false;
+        const text = `${row.SUBJECT} ${row.DEPARTMENT}`.toLowerCase();
+        return keyword === "" || text.includes(keyword);
+    });
+
+    if (filteredData.length === 0) {
+        container.innerHTML = "<p>No results found.</p>";
+        return;
+    }
+
+    filteredData.forEach(row => {
+        let summary = `${row.SUBJECT} - Department: ${row.DEPARTMENT}`;
+        if (summary.length > 160) summary = summary.slice(0, 157) + "...";
+
+        const item = document.createElement("div");
+        item.className = "circular";
+        item.innerHTML = `
+            <strong>${row.DATE}</strong> - <em>${row.DEPARTMENT}</em><br>
+            <p>${summary}</p>
+            <a href="${row.LINK}" target="_blank">📥 Download (${row["FILE SIZE"] || "File"})</a>
+        `;
+        container.appendChild(item);
+    });
+}
+
+// On load
+setDefaultDates();
+fetchCirculars();
 </script>
+
 </body>
 </html>
