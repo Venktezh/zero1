@@ -5,7 +5,38 @@
     <title>ClearCache | Games</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="theme.css">
-    <link rel="stylesheet" href="" id="game-style">
+    <link rel="stylesheet" href="sudoku.css" id="game-style-sudoku">
+    <link rel="stylesheet" href="minesweeper.css" id="game-style-minesweeper" disabled>
+    <style>
+        /* Tab Styles to Match Site Theme */
+        .game-tabs {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2.5em 0 1.7em 0;
+            gap: 0.7em;
+        }
+        .game-tab-btn {
+            background: var(--nav-bg, #fff);
+            color: var(--primary, #34495e);
+            border: 1.7px solid var(--accent, #3498db);
+            border-radius: 0.6em;
+            font-size: 1.13em;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            padding: .6em 2.2em;
+            box-shadow: 0 1px 6px rgba(44,62,80,0.04);
+            transition: background 0.17s, color 0.17s, border-color 0.15s;
+            outline: none;
+        }
+        .game-tab-btn.active, .game-tab-btn:focus {
+            background: var(--accent, #3498db);
+            color: #fff;
+            border-color: var(--accent-dark, #2980b9);
+            z-index:2;
+        }
+    </style>
 </head>
 <body>
 <header style="position:relative;">
@@ -24,52 +55,37 @@
         <a href="game.html" class="nav-item active">Game</a>
     </div>
 </nav>
+
+<!-- This bar appears only in the game page -->
 <div class="game-tabs">
     <button class="game-tab-btn active" id="tab-sudoku" onclick="showGameTab('sudoku')">Sudoku</button>
     <button class="game-tab-btn" id="tab-minesweeper" onclick="showGameTab('minesweeper')">Minesweeper</button>
 </div>
-<div id="sudoku-tab" class="game-tab-content active"></div>
-<div id="minesweeper-tab" class="game-tab-content"></div>
 
+<div id="sudoku-tab" class="game-tab-content"></div>
+<div id="minesweeper-tab" class="game-tab-content" style="display:none"></div>
+
+<script src="sudoku.js"></script>
+<script src="minesweeper.js"></script>
 <script>
-// --- Tab Logic + Dynamic loader ---
-const gameTabs = {
-    sudoku: {
-        css: "sudoku.css",
-        js: "sudoku.js",
-        html: `<div id="sudoku-root"></div>`
-    },
-    minesweeper: {
-        css: "minesweeper.css",
-        js: "minesweeper.js",
-        html: `<div id="minesweeper-root"></div>`
-    }
-};
-let currentGame = "sudoku";
 function showGameTab(game) {
-    document.getElementById('tab-sudoku').classList.remove('active');
-    document.getElementById('tab-minesweeper').classList.remove('active');
-    document.getElementById(game === "sudoku" ? 'tab-sudoku' : 'tab-minesweeper').classList.add('active');
-    document.getElementById('sudoku-tab').classList.remove('active');
-    document.getElementById('minesweeper-tab').classList.remove('active');
-    document.getElementById(game + '-tab').classList.add('active');
-    currentGame = game;
-    loadGame(game);
+    // Tabs
+    document.getElementById('tab-sudoku').classList.toggle('active', game === 'sudoku');
+    document.getElementById('tab-minesweeper').classList.toggle('active', game === 'minesweeper');
+
+    // Tab contents
+    document.getElementById('sudoku-tab').style.display = game === 'sudoku' ? '' : 'none';
+    document.getElementById('minesweeper-tab').style.display = game === 'minesweeper' ? '' : 'none';
+
+    // CSS enable/disable
+    document.getElementById('game-style-sudoku').disabled = (game !== 'sudoku');
+    document.getElementById('game-style-minesweeper').disabled = (game !== 'minesweeper');
 }
-function loadGame(game) {
-    document.getElementById('game-style').href = gameTabs[game].css;
-    document.getElementById('sudoku-tab').innerHTML = '';
-    document.getElementById('minesweeper-tab').innerHTML = '';
-    document.getElementById(game + '-tab').innerHTML = gameTabs[game].html;
-    let oldScript = document.getElementById('game-script');
-    if (oldScript) oldScript.remove();
-    let script = document.createElement('script');
-    script.src = gameTabs[game].js;
-    script.id = 'game-script';
-    script.defer = true;
-    document.body.appendChild(script);
-}
-document.addEventListener("DOMContentLoaded", () => loadGame("sudoku"));
+
+// Show sudoku by default on first load
+showGameTab('sudoku');
+
+// Theme toggle
 (function() {
     function getPreferredTheme() {
         const stored = localStorage.getItem('theme');
