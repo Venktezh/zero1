@@ -7,23 +7,16 @@
     <link rel="stylesheet" href="theme.css">
     <style>
         .game-tabs {
-            text-align:center;
-            margin-top: 2em;
-            margin-bottom: 2.2em;
+            text-align:center; margin-top: 2em; margin-bottom: 2.2em;
         }
         .game-tab-btn {
             background: var(--box-bg, #f4f8fa);
             color: var(--primary, #34495e);
             border: 1.7px solid var(--accent, #3498db);
             border-radius: 0.6em 0.6em 0 0;
-            font-size: 1.14em;
-            font-family: inherit;
-            font-weight: 500;
-            cursor: pointer;
-            margin: 0 .15em;
-            padding: .5em 2.2em;
-            transition: background 0.18s, color 0.18s, border-color 0.18s;
-            outline: none;
+            font-size: 1.14em; font-family: inherit; font-weight: 500;
+            cursor: pointer; margin: 0 .15em; padding: .5em 2.2em;
+            transition: background 0.18s, color 0.18s, border-color 0.18s; outline: none;
         }
         .game-tab-btn.active, .game-tab-btn:focus {
             background: var(--accent, #3498db);
@@ -46,7 +39,7 @@
             margin: 0 auto;
             width: max-content;
         }
-        .cell {
+        .mine-cell {
             width: 2em; height: 2em;
             text-align: center; vertical-align: middle;
             border: 1px solid #bbb;
@@ -58,12 +51,12 @@
             transition: background 0.13s, border 0.13s;
             padding: 0;
         }
-        .cell.revealed { background: #fafcff; border-color: #aaa; cursor: default; }
-        .cell.mine { background: #ecd6d8 !important; }
-        .cell.flagged { background: #f9f4c0; color: #c0392b; }
-        .cell:disabled { cursor: default; }
-        .cell.mine.revealed { color: #c0392b; }
-        .cell.mine.exploded { border: 3px solid red !important; box-sizing: border-box; background: #ffadad !important;}
+        .mine-cell.revealed { background: #fafcff; border-color: #aaa; cursor: default; }
+        .mine-cell.mine { background: #ecd6d8 !important; }
+        .mine-cell.flagged { background: #f9f4c0; color: #c0392b; }
+        .mine-cell:disabled { cursor: default; }
+        .mine-cell.mine.revealed { color: #c0392b; }
+        .mine-cell.mine.exploded { border: 3px solid red !important; box-sizing: border-box; background: #ffadad !important;}
         .num1 { color: #1a85e8;}
         .num2 { color: #3d990a;}
         .num3 { color: #e8a91a;}
@@ -82,13 +75,13 @@
             margin: 2em auto 1em auto;
             width: fit-content;
         }
-        .cell-sudoku {
+        .sudoku-cell {
             background: #fff; border: 1px solid #bbb; font-size: 1.2em; text-align: center; outline: none;
         }
-        .cell-sudoku:focus { border-color: #2980b9; }
-        .cell-sudoku[readonly] { background: #ecf0f1; color: #34495e; font-weight: bold; }
-        .cell-sudoku.block-right { border-right: 3px solid #34495e;}
-        .cell-sudoku.block-bottom { border-bottom: 3px solid #34495e;}
+        .sudoku-cell:focus { border-color: #2980b9; }
+        .sudoku-cell[readonly] { background: #ecf0f1; color: #34495e; font-weight: bold; }
+        .sudoku-cell.block-right { border-right: 3px solid #34495e;}
+        .sudoku-cell.block-bottom { border-bottom: 3px solid #34495e;}
         .controls { text-align: center; margin: 2em 0; }
         .btn {
             background: var(--accent, #3498db); color: #fff; border: none; border-radius: .4em;
@@ -126,12 +119,10 @@
         <a href="game.html" class="nav-item active">Game</a>
     </div>
 </nav>
-
 <div class="game-tabs">
     <button class="game-tab-btn active" id="tab-sudoku" onclick="showGameTab('sudoku')">Sudoku</button>
     <button class="game-tab-btn" id="tab-minesweeper" onclick="showGameTab('minesweeper')">Minesweeper</button>
 </div>
-
 <div id="sudoku-tab" class="game-tab-content active">
     <h2 style="text-align:center;margin-top:0em;font-weight:600;color:var(--primary);">Sudoku Game</h2>
     <div id="levelLabel" style="color: var(--accent); text-align:center; font-size: 1.1em; margin-bottom: 0.7em;">
@@ -145,7 +136,6 @@
     </div>
     <div id="message"></div>
 </div>
-
 <div id="minesweeper-tab" class="game-tab-content">
     <h2 class="center" style="margin-top:0em; color:var(--primary);">Minesweeper</h2>
     <div id="mine-container">
@@ -160,7 +150,6 @@
         <div id="status" class="center"></div>
     </div>
 </div>
-
 <script>
 // ===== Tab Switcher =====
 function showGameTab(game) {
@@ -176,7 +165,6 @@ function showGameTab(game) {
         document.getElementById('tab-minesweeper').classList.add('active');
     }
 }
-
 // ===== SUDOKU =====
 let level = 1;
 let solution = [], puzzle = [];
@@ -243,7 +231,7 @@ function renderSudoku() {
             let cell = document.createElement('input');
             cell.type = 'text';
             cell.maxLength = 1;
-            cell.className = 'cell-sudoku';
+            cell.className = 'sudoku-cell';
             if ((col+1)%3 === 0 && col < 8) cell.classList.add('block-right');
             if ((row+1)%3 === 0 && row < 8) cell.classList.add('block-bottom');
             if (puzzle[row][col] !== "") {
@@ -261,7 +249,7 @@ function renderSudoku() {
 }
 function checkSudoku() {
     let correct = true;
-    const cells = document.querySelectorAll('.cell-sudoku:not([readonly])');
+    const cells = document.querySelectorAll('.sudoku-cell:not([readonly])');
     cells.forEach(e => {
         const r = parseInt(e.dataset.r), c = parseInt(e.dataset.c);
         let v = Number(e.value);
@@ -285,7 +273,6 @@ function checkSudoku() {
 function restartSudoku() { renderSudoku(); }
 function nextLevel() { createSudoku(true); }
 createSudoku();
-
 // === MINESWEEPER ===
 const rows = 9, cols = 9, mines = 10;
 let board = [], revealed = [], flagged = [];
@@ -309,7 +296,7 @@ function drawBoard() {
     for(let r=0; r<rows; r++) {
         for(let c=0; c<cols; c++) {
             const cell = document.createElement('button');
-            cell.className = 'cell';
+            cell.className = 'mine-cell';
             cell.dataset.r = r;
             cell.dataset.c = c;
             cell.addEventListener('click', cellClick);
@@ -375,9 +362,10 @@ function reveal(r, c) {
 }
 function updateCell(r, c) {
     const i = r*cols+c;
-    const btn = document.getElementsByClassName('cell')[i];
+    const minecells = document.getElementsByClassName('mine-cell');
+    const btn = minecells[i];
     btn.disabled = revealed[r][c] || gameOver;
-    btn.className = 'cell';
+    btn.className = 'mine-cell';
     if (flagged[r][c] && !revealed[r][c]) {
         btn.classList.add('flagged');
         btn.textContent = "🚩";
