@@ -5,231 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClearCache | Dashboard</title>
     <link rel="stylesheet" href="theme.css">
-    <style>
-        :root {
-            --primary: #34495e;
-            --secondary: #7f8c8d;
-            --accent: #3498db;
-            --accent-dark: #2980b9;
-            --success: #27ae60;
-            --box-bg: #f4f8fa;
-            --shadow: 0 12px 36px 0 rgba(44, 62, 80, 0.09);
-        }
-        body {
-            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-            background: #f6f7f9;
-            margin: 0;
-        }
-        header {
-            text-align: center;
-            margin-top: 2.3rem;
-        }
-        header h1 {
-            font-size: 2.3rem;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 0.25rem;
-        }
-        header .tagline {
-            color: var(--secondary);
-            font-size: 1.07rem;
-            margin: 0;
-        }
-        nav {
-            margin: 2.2rem auto 0 auto;
-            display: flex;
-            justify-content: center;
-        }
-        .nav-container {
-            display: flex;
-            gap: 1rem;
-        }
-        .nav-item {
-            padding: 0.7rem 2.1rem;
-            border: 1px solid #e3e8ee;
-            border-radius: 0.6rem;
-            background: #fff;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: background 0.15s, color 0.15s;
-        }
-        .nav-item.active, .nav-item:focus, .nav-item:hover {
-            background: var(--primary);
-            color: #fff;
-            outline: none;
-            border-color: var(--primary);
-        }
-        main.dashboard {
-            width: 100%;
-            max-width: 1120px;
-            margin: 3.5rem auto 0 auto;
-            padding: 0 1rem;
-            min-height: 60vh;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2.2rem;
-        }
-        .dashboard-left {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .dashboard-left h2 {
-            font-size: 2rem;
-            color: var(--primary);
-            font-weight: 700;
-            margin-bottom: 0.45rem;
-        }
-        .dashboard-left p {
-            color: var(--secondary);
-            font-size: 1.15rem;
-            line-height: 1.6;
-        }
-        .dashboard-right {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-        }
-        .cache-box {
-            background: var(--box-bg);
-            box-shadow: var(--shadow);
-            border-radius: 1.5rem;
-            padding: 2.5rem 2.3rem 2.1rem 2.3rem;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            margin: auto;
-        }
-        .cache-box h3 {
-            font-size: 1.35rem;
-            color: var(--primary);
-            font-weight: 700;
-            margin-top: 0;
-        }
-        .cache-box p, .cache-box h4 {
-            color: var(--secondary);
-            margin: 0.53rem 0 0.72rem 0;
-        }
-        .cache-box h4 {
-            color: var(--primary);
-            font-weight: bold;
-            font-size: 1.08rem;
-            margin-bottom: 0.25rem;
-            margin-top: 0.1rem;
-        }
-        .file-input-wrapper {
-            margin: 1.5rem 0 0.2rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1.1rem;
-            flex-wrap: wrap;
-        }
-        #fileInput { display: none; }
-        #fileName {
-            font-style: italic;
-            font-size: 1.05rem;
-            color: var(--secondary);
-            max-width: 180px;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 0.39rem;
-            padding: 0.74rem 2.1rem;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            margin-top: 0;
-            margin-bottom: 0;
-            transition: background 0.16s;
-            box-shadow: 0 1px 8px rgba(44, 62, 80,.07);
-            outline: none;
-        }
-        .btn:active, .btn:focus, .btn:hover {
-            background: var(--accent-dark);
-        }
-        #result {
-            margin: 1.08rem 0 0 0;
-            font-size: 1.01rem;
-            min-height: 1.15em;
-            transition: color 0.2s;
-        }
-        .success { color: var(--success); }
-        .error { color: #c0392b;}
-        #downloadLink {
-            display: none;
-            margin-top: 1.05rem;
-            width: 100%;
-            box-sizing: border-box;
-            font-size: 1.04rem;
-            font-weight: 500;
-            background: var(--primary);
-        }
-        /* Extra dashboard section */
-        .dashboard-section {
-            max-width: 1070px;
-            margin: 3.3rem auto 0 auto;
-            padding: 0 1rem;
-        }
-        .dashboard-section h2 {
-            color: var(--primary);
-            font-weight: 700;
-        }
-        .dashboard-section p {
-            color: var(--secondary);
-            font-size: 1.08rem;
-        }
-        footer {
-            margin-top: 2.5rem;
-            text-align: center;
-            color: var(--secondary);
-            font-size: 1rem;
-            padding: 1.2rem 0 1rem 0;
-        }
-        /* Responsive */
-        @media (max-width: 980px) {
-            main.dashboard {
-                grid-template-columns: 1fr;
-                gap: 1.1rem;
-            }
-            .dashboard-right, .dashboard-left {
-                justify-content: center !important;
-                align-items: center !important;
-            }
-        }
-        @media (max-width: 600px) {
-            .nav-container {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            nav { margin: 1.1rem 0 0 0; }
-            .cache-box { padding: 1rem 0.5rem; max-width: 99vw; }
-            header h1 { font-size: 1.45rem; }
-            .dashboard-left h2 { font-size: 1.19rem; }
-            main.dashboard, .dashboard-section { padding: 0 0.2rem; }
-            .btn, #downloadLink { width: 100%; font-size:1rem;}
-        }
-    </style>
 </head>
 <body>
-    <header>
+    <header style="position:relative;">
         <h1>ClearCache</h1>
         <p class="tagline">Minimal digital workspace</p>
+        <!-- Theme toggle button -->
+        <button id="theme-toggle" aria-label="Toggle light or dark theme"
+            style="position: absolute; right: 2.2rem; top: 2.3rem; background: none; border: none; cursor: pointer; font-size: 1.75rem; color: var(--primary); transition: color 0.2s;">
+            🌙
+        </button>
     </header>
-<nav aria-label="Main navigation">
-    <div class="nav-container">
-        <a href="index.html" class="nav-item active">Home</a>
-        <a href="about.html" class="nav-item">About</a>
-        <a href="contact.html" class="nav-item">Contact</a>
-        <a href="game.html" class="nav-item">Game</a>
-    </div>
-</nav>
+    <nav aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-item active">Home</a>
+            <a href="about.html" class="nav-item">About</a>
+            <a href="contact.html" class="nav-item">Contact</a>
+            <a href="game.html" class="nav-item">Game</a>
+        </div>
+    </nav>
     <main class="dashboard">
         <div class="dashboard-left">
             <h2>Clean Interface</h2>
@@ -261,7 +55,6 @@
     <script>
         // Auto-update year in footer
         document.getElementById('year').textContent = new Date().getFullYear();
-
         // File processing logic
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -295,6 +88,30 @@
                 downloadLink.style.display = 'none';
             }
         });
+        // Theme toggle
+        (function() {
+            function getPreferredTheme() {
+                const stored = localStorage.getItem('theme');
+                if (stored) return stored;
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                document.getElementById('theme-toggle').innerHTML = theme === "dark" ? "🌞" : "🌙";
+                document.getElementById('theme-toggle').setAttribute('aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                const button = document.getElementById('theme-toggle');
+                if (!button) return;
+                let curTheme = getPreferredTheme();
+                setTheme(curTheme);
+                button.onclick = function() {
+                    curTheme = (curTheme === "dark" ? "light" : "dark");
+                    setTheme(curTheme);
+                };
+            });
+        })();
     </script>
 </body>
 </html>
