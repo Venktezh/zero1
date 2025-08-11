@@ -1,8 +1,7 @@
-// == PREMIUM Minesweeper with Streak Counter ==
+// Minesweeper with Streak Counter
 (function() {
     const rows=9, cols=9, mines=10;
     function $(id){return document.getElementById(id);}
-
     // Streak handling using localStorage
     function getStreak() { return parseInt(localStorage.getItem('minesweeper_streak') || "0",10); }
     function setStreak(n) { localStorage.setItem('minesweeper_streak', String(n)); $('ms-streak-count').textContent=n; }
@@ -13,14 +12,11 @@
         el.classList.add('streak-grow');
         setTimeout(()=>{el.classList.remove('streak-grow')}, 500);
     }
-
     // Init streak UI
     if($('ms-streak-count')) $('ms-streak-count').textContent = getStreak();
-
     // Minesweeper Engine
     let board = [], revealed = [], flagged = [];
     let gameOver = false, started = false, minesLeft = mines, explodedCell = null;
-
     function newGame() {
         if(document.querySelector('.ms-glass-panel')) document.querySelector('.ms-glass-panel').classList.remove('ms-win-effect');
         board = Array.from({length: rows}, () => Array(cols).fill(0));
