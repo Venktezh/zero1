@@ -2,64 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NSE Circulars (RSS)</title>
+    <title>NSE Circulars (Categorized)</title>
     <style>
-        body { font-family: Arial, max-width:800px; margin:0 auto; background:#f5f7fb; color:#134d72;}
-        h1 { text-align: center; margin: 40px 0 24px;}
+        body { font-family: Arial, max-width: 820px; margin: 0 auto; background: #f5f7fb; color: #134d72; }
+        h1 { text-align: center; margin: 40px 0 30px;}
+        .group-block { margin-bottom:32px; }
+        .group-title {
+            color: #fff;
+            background: #2e6da4;
+            padding: 10px 20px;
+            border-radius:7px 7px 0 0;
+            font-size: 1.17em;
+            font-weight: bold;
+            margin-bottom: 0;
+            letter-spacing: 0.5px;
+        }
         .circular {
             background: #fff;
-            margin: 22px 0;
+            margin: 0 0 13px 0;
             padding: 15px 19px;
-            border-radius: 8px;
-            box-shadow:0 2px 8px #0001;
+            border-radius: 0 0 8px 8px;
+            box-shadow:0 2px 7px #0001;
             border-left: 5px solid #2e6da4;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
         }
-        .circular-title { font-size:1.14em; font-weight: bold; color: #2e6da4;}
-        .circular-date  { color: #777; font-size:.96em; margin-bottom:4px; }
+        .circular-title { font-size:1.11em; font-weight: bold; color: #2e6da4;}
+        .circular-date  { color: #777; font-size:.97em; }
         .circular-link  { color: #126118; text-decoration:underline;}
-        .circular-desc  { font-size:.98em; }
-        @media (max-width:600px) { body {padding: 10px;} }
+        .circular-desc  { font-size:.99em; }
+        @media (max-width:600px) { body {padding: 7px;} .group-title {font-size:1em; padding:8px 6px;} }
     </style>
 </head>
 <body>
-    <h1>Latest NSE Circulars (RSS)</h1>
-    <div id="feed">Loading...</div>
+    <h1>Latest NSE Circulars</h1>
+    <div id="feed">Loading circulars…</div>
     <script>
     async function loadRSS() {
         const url = "https://nsearchives.nseindia.com/content/RSS/Circulars.xml";
         const apiurl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+        const groupDefs = [
+            {
+                title: "IPO / Listing Circulars (including SME IPO)",
+                keywords: ["IPO", "listing", "SME IPO"]
+            },
+            {
+                title: "ASM / ESM / ST-ASM Circulars",
+                keywords: ["ASM", "ESM", "ST-ASM"]
+            },
+        ];
+        const grouped = [[],[]], rest = [];
         try {
             const res = await fetch(apiurl);
-            if(!res.ok) throw new Error("RSS2JSON failed");
+            if(!res.ok) throw new Error("Could not fetch.");
             const data = await res.json();
-            let html = "";
             const now = new Date();
-
-            // Filter: Show only items with pubDate <= now (i.e., not in the future)
-            const items = (data.items || []).filter(item => {
+            for (const item of (data.items || [])) {
                 const pub = new Date(item.pubDate);
-                return pub <= now;
-            });
-
-            if(items.length === 0)
-                html = "No past or current circulars found!";
-            else
-                html = items.map(item => `
-                    <div class="circular">
-                        <div class="circular-title">
-                            <a class="circular-link" href="${item.link}" target="_blank">${item.title}</a>
-                        </div>
-                        <div class="circular-date">${new Date(item.pubDate).toLocaleDateString("en-IN")}</div>
-                        <div class="circular-desc">${item.description ? item.description : '<em>No summary available.</em>'}</div>
-                    </div>
-                `).join("");
+                if(pub > now) continue; // Skip future circulars
+                const titleDesc = (item.title + " " + item.description).toLowerCase();
+                let matched = false;
+                for(let i=0;i<groupDefs.length;i++) {
+                    for(const kw of groupDefs[i].keywords) {
+                        if(titleDesc.includes(kw.toLowerCase())) {
+                            grouped[i].push(item);
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if(matched) break;
+                }
+                if(!matched) rest.push(item);
+            }
+            const renderCircular = item => `
+                <div class="circular">
+                    <div class="circular-title"><a class="circular-link" href="${item.link}" target="_blank">${item.title}</a></div>
+                    <div class="circular-date">${new Date(item.pubDate).toLocaleDateString("en-IN")}</div>
+                    <div class="circular-desc">${item.description ? item.description : "<em>No summary available.</em>"}</div>
+                </div>
+            `;
+            let html = "";
+            for (let i=0; i<groupDefs.length; i++) {
+                if(grouped[i].length) {
+                    html += `<div class="group-block"><div class="group-title">${groupDefs[i].title}</div>`;
+                    html += grouped[i].map(renderCircular).join("") + "</div>";
+                }
+            }
+            if(rest.length) {
+                html += `<div class="group-block"><div class="group-title" style="background:#4f4f4f;">Other Circulars</div>`;
+                html += rest.map(renderCircular).join("") + "</div>";
+            }
+            if(!html) html = "<em>No current or past circulars found!</em>";
             document.getElementById("feed").innerHTML = html;
         } catch(e) {
-            document.getElementById("feed").innerHTML = "<span style='color:#b41a1a;'>Failed to load circulars. Try again later.</span>";
-            console.error(e);
+            document.getElementById("feed").innerHTML = `<span style='color:#c03232;'>Could not load circulars. Try reloading.</span>`;
+            console.error(e)
         }
     }
     loadRSS();
