@@ -2,9 +2,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: 100vw;
-    box-sizing: border-box;
 }
 .ms-glass-panel {
     padding: 2.6em 2.1em 2.8em 2.1em;
@@ -58,8 +55,6 @@
     box-shadow: 0 2px 16px #0984e324, 0 1px 10px #fff4;
     margin: 0 auto;
     width: max-content;
-    max-width: 100vw;
-    overflow-x: auto;
 }
 .mine-cell {
     width: 2em; height: 2em;
@@ -70,23 +65,30 @@
     font-family: inherit;
     user-select: none;
     cursor: pointer;
-    max-width: 100%;
-    max-height: 100%;
-    box-sizing: border-box;
+    transition: background 0.13s, border 0.13s;
+    padding: 0;
+    border-radius: .31em;
+    box-shadow: 0 2px 8px #0984e311;
 }
-@media (max-width: 600px) {
-    .ms-glass-panel {
-        padding: 1.1em 0.4em 1.4em 0.4em;
-        max-width: 98vw;
-    }
-    .board {
-        grid-template-columns: repeat(9, minmax(1.3em, 1fr));
-        grid-template-rows: repeat(9, minmax(1.3em, 1fr));
-        margin: 0 auto;
-    }
-    .mine-cell {
-        width: 1.3em;
-        height: 1.3em;
-        font-size: 0.93em;
-    }
+.mine-cell:enabled:active { background:#bae3ff; border-color:#71a5ee; transition:none;}
+.mine-cell.revealed { background: #fafcff; border-color: #9abacd; color: #222; cursor: default; }
+.mine-cell.mine { background: #f9e4e6 !important; color: #c0392b !important; font-weight: 900; }
+.mine-cell.flagged { background: #f9efc0; color: #e67e22; }
+.mine-cell:disabled { cursor: default; background: #e0e6f1; }
+.mine-cell.mine.exploded { border: 3px solid red !important; box-sizing: border-box; background: #ffadad !important;}
+.num1 { color: #3194e4; font-weight: 600;}
+.num2 { color: #38b245; font-weight: 600;}
+.num3 { color: #e8a91a;}
+.num4 { color: #e2381a; font-weight: 600;}
+.num5 { color: #425969;}
+.num6 { color: #7a57e8;}
+.num7 { color: #971ae8;}
+.num8 { color: #222;}
+#status { margin-top: 1em; font-size:1.13em;}
+.ms-glass-panel.ms-win-effect { box-shadow: 0 0 18px 6px #82e0aa77, 0 1px 10px #12ff9077;}
+.ms-streak-bar.streak-grow { animation: streakFlare .55s cubic-bezier(.39,1.19,.47,.93);}
+@keyframes streakFlare {
+    0% { box-shadow:0 0 0 #f5fac3;}
+    60% { box-shadow:0 0 22px 8px #ffe993;}
+    100% { box-shadow:0 1px 5px #0984e322;}
 }
