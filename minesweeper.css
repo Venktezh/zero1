@@ -107,3 +107,8 @@
         text-shadow: 0 1px 3px #2229;
     }
 }
+@media (prefers-color-scheme: light) {
+  .ms-glass-panel       { background: #fbfbfd !important; }
+  .board                { background: #f7fbff !important; }
+  .mine-cell            { background: #fcfeff !important; }
+}
