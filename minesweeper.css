@@ -1,45 +1,94 @@
-#minesweeper-tab {
+.minesweeper-tab {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-.board {
+.ms-glass-panel {
+    padding: 2.6em 2.1em 2.8em 2.1em;
+    border-radius: 1.5em;
+    background: rgba(255,255,255,0.85);
+    box-shadow:
+        0 4px 32px rgba(68,126,207,0.13),
+        0 1px 10px rgba(44,62,80, 0.08);
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto 0 auto;
+    position: relative;
+}
+#ms-heading-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.65em;
+}
+.ms-streak-bar {
+    display: flex; align-items: center; gap: .42em;
+    font-size: 1.05em;
+    font-weight: 500;
+    background: rgba(0,0,0,0.06);
+    border-radius: .73em;
+    padding: .12em .77em;
+    box-shadow: 0 1px 5px #0984e322;
+    min-width: 88px;
+}
+.streak-icon { font-weight: 700; font-size: 1.25em; line-height:1; }
+.streak-label { opacity: .7; margin-right:.3em; }
+#ms-streak-count { font-size: 1.18em; color: #d35400; font-weight: 700; }
+.ms-prem-btn {
+    font-size: 1.13em; border-radius: .5em; padding: .37em 1.45em;
+    color: #fff; font-weight: 700;
+    background: linear-gradient(90deg, #00b894 0%, #0984e3 95%);
+    border: none;
+    box-shadow: 0 2px 12px #0984e315, 0 1.5px 0 #0984e318 inset;
+    outline: none;
+    cursor: pointer;
+    transition: filter .16s, background .16s, box-shadow .18s;
+}
+.ms-prem-btn:hover { filter: brightness(1.07) contrast(1.12); background:linear-gradient(93deg, #0996e3 65%, #fdcb6e 110%); }
+.ms-glass-panel h2 { color: #0857b4; font-weight: 700; letter-spacing:.011em; margin-bottom:0; }
+.board { 
     display: grid;
     grid-template-columns: repeat(9, 2em);
     grid-template-rows: repeat(9, 2em);
     gap: 0;
-    background: #cccccc;
+    background: #d1e4f9; 
     border-radius: 7px;
-    border: 2px solid #444;
-    box-shadow: 0 1px 10px #0001;
+    border: 2px solid #2887d3;
+    box-shadow: 0 2px 16px #0984e324, 0 1px 10px #fff4;
     margin: 0 auto;
     width: max-content;
 }
 .mine-cell {
     width: 2em; height: 2em;
     text-align: center; vertical-align: middle;
-    border: 1px solid #bbb;
-    background: #e4e4e6;
+    border: 1.9px solid #bbb;
+    background: #eaf6fa;
     font-size: 1.25em;
     font-family: inherit;
     user-select: none;
     cursor: pointer;
     transition: background 0.13s, border 0.13s;
     padding: 0;
+    border-radius: .31em;
+    box-shadow: 0 2px 8px #0984e311;
 }
-.mine-cell.revealed { background: #fafcff; border-color: #aaa; cursor: default; }
-.mine-cell.mine { background: #ecd6d8 !important; }
-.mine-cell.flagged { background: #f9f4c0; color: #c0392b; }
-.mine-cell:disabled { cursor: default; }
-.mine-cell.mine.revealed { color: #c0392b; }
+.mine-cell:enabled:active { background:#bae3ff; border-color:#71a5ee; transition:none;}
+.mine-cell.revealed { background: #fafcff; border-color: #9abacd; color: #222; cursor: default; }
+.mine-cell.mine { background: #f9e4e6 !important; color: #c0392b !important; font-weight: 900; }
+.mine-cell.flagged { background: #f9efc0; color: #e67e22; }
+.mine-cell:disabled { cursor: default; background: #e0e6f1; }
 .mine-cell.mine.exploded { border: 3px solid red !important; box-sizing: border-box; background: #ffadad !important;}
-.num1 { color: #1a85e8;}
-.num2 { color: #3d990a;}
+.num1 { color: #3194e4; font-weight: 600;}
+.num2 { color: #38b245; font-weight: 600;}
 .num3 { color: #e8a91a;}
-.num4 { color: #e2381a;}
+.num4 { color: #e2381a; font-weight: 600;}
 .num5 { color: #425969;}
-.num6 { color: #8774e3;}
-.num7 { color: #bb1ae8;}
-.num8 { color: #13191d;}
-.controls { text-align:center; margin: 1.2em;}
-#status { margin-bottom:1em;}
+.num6 { color: #7a57e8;}
+.num7 { color: #971ae8;}
+.num8 { color: #222;}
+#status { margin-top: 1em; font-size:1.13em;}
+.ms-glass-panel.ms-win-effect { box-shadow: 0 0 18px 6px #82e0aa77, 0 1px 10px #12ff9077;}
+.ms-streak-bar.streak-grow { animation: streakFlare .55s cubic-bezier(.39,1.19,.47,.93);}
+@keyframes streakFlare {
+    0% { box-shadow:0 0 0 #f5fac3;}
+    60% { box-shadow:0 0 22px 8px #ffe993;}
+    100% { box-shadow:0 1px 5px #0984e322;}
+}
