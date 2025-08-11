@@ -92,3 +92,18 @@
     60% { box-shadow:0 0 22px 8px #ffe993;}
     100% { box-shadow:0 1px 5px #0984e322;}
 }
+@media (prefers-color-scheme: dark) {
+    .ms-glass-panel {
+        background: rgba(30, 32, 36, 0.98) !important;
+    }
+    .ms-streak-bar {
+        color: #fff !important;
+        background: rgba(50,50,60,0.43);
+    }
+    .ms-streak-bar .streak-label,
+    .ms-streak-bar .streak-icon,
+    #ms-streak-count {
+        color: #fff !important;
+        text-shadow: 0 1px 3px #2229;
+    }
+}
