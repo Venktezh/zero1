@@ -28,39 +28,41 @@
     <h1>Latest NSE Circulars (RSS)</h1>
     <div id="feed">Loading...</div>
     <script>
-async function loadRSS() {
-    const url = "https://nsearchives.nseindia.com/content/RSS/Circulars.xml";
-    const apiurl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
-    try {
-        const res = await fetch(apiurl);
-        if(!res.ok) throw "RSS2JSON failed";
-        const data = await res.json();
-        let html = "";
-        // Filter for items from the last 7 days
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const weeklyItems = (data.items || []).filter(item => {
-          const pub = new Date(item.pubDate);
-          return pub >= weekAgo && pub <= now;
-        });
-        if(weeklyItems.length === 0)
-            html = "No circulars in the last 7 days!";
-        else
-            html = weeklyItems.map(item => `
-                <div class="circular">
-                    <div class="circular-title">
-                        <a class="circular-link" href="${item.link}" target="_blank">${item.title}</a>
+    async function loadRSS() {
+        const url = "https://nsearchives.nseindia.com/content/RSS/Circulars.xml";
+        const apiurl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+        try {
+            const res = await fetch(apiurl);
+            if(!res.ok) throw new Error("RSS2JSON failed");
+            const data = await res.json();
+            let html = "";
+            const now = new Date();
+
+            // Filter: Show only items with pubDate <= now (i.e., not in the future)
+            const items = (data.items || []).filter(item => {
+                const pub = new Date(item.pubDate);
+                return pub <= now;
+            });
+
+            if(items.length === 0)
+                html = "No past or current circulars found!";
+            else
+                html = items.map(item => `
+                    <div class="circular">
+                        <div class="circular-title">
+                            <a class="circular-link" href="${item.link}" target="_blank">${item.title}</a>
+                        </div>
+                        <div class="circular-date">${new Date(item.pubDate).toLocaleDateString("en-IN")}</div>
+                        <div class="circular-desc">${item.description ? item.description : '<em>No summary available.</em>'}</div>
                     </div>
-                    <div class="circular-date">${new Date(item.pubDate).toLocaleDateString("en-IN")}</div>
-                    <div class="circular-desc">${item.description ? item.description : '<em>No summary available.</em>'}</div>
-                </div>
-            `).join("");
-        document.getElementById("feed").innerHTML = html;
-    } catch(e) {
-        document.getElementById("feed").innerHTML = "<span style='color:#b41a1a;'>Failed to load circulars. Try again later.</span>";
+                `).join("");
+            document.getElementById("feed").innerHTML = html;
+        } catch(e) {
+            document.getElementById("feed").innerHTML = "<span style='color:#b41a1a;'>Failed to load circulars. Try again later.</span>";
+            console.error(e);
+        }
     }
-}
-loadRSS();
-</script>
+    loadRSS();
+    </script>
 </body>
 </html>
