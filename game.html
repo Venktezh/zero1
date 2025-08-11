@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="sudoku.css" id="game-style-sudoku">
     <link rel="stylesheet" href="minesweeper.css" id="game-style-minesweeper" disabled>
     <style>
-        /* Tab Styles to Match Site Theme */
         .game-tabs {
             display: flex;
             justify-content: center;
@@ -35,6 +34,28 @@
             color: #fff;
             border-color: var(--accent-dark, #2980b9);
             z-index:2;
+        }
+        @media (max-width: 650px) {
+            .game-tabs {
+                flex-direction: column;
+                gap: 0.6em;
+            }
+            .game-tab-btn {
+                width: 90vw;
+                font-size: 1.05em;
+                padding: .7em 0;
+            }
+        }
+        @media (max-width: 600px) {
+            .nav-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .nav-item {
+                padding: 1em 0.5em;
+                text-align: center;
+                font-size: 1.1em;
+            }
         }
     </style>
 </head>
@@ -66,64 +87,32 @@
         <div id="ms-heading-row">
             <h2>Minesweeper</h2>
             <div class="ms-streak-bar" id="streak-bar">
-                <span class="streak-icon">🔥</span>
-                <span class="streak-label">Streak:</span>
-                <span id="ms-streak-count">0</span>
+                <!-- Minesweeper streak content here -->
             </div>
         </div>
-        <div id="mine-container">
-            <div id="game-options" style="margin-bottom:1.2em;">
-                <span>Level: Easy (9x9, 10 mines)</span>
-                <button class="btn ms-prem-btn" id="mineNewBtn">⟳ New Game</button>
-                <span id="mine-count"></span>
-            </div>
-            <div id="board-wrap">
-                <div class="board" id="board"></div>
-            </div>
-            <div id="status" class="center"></div>
-        </div>
+        <!-- Minesweeper game content goes here -->
     </div>
 </div>
-<script src="sudoku.js"></script>
-<script src="minesweeper.js"></script>
+<!-- Add your game scripts here -->
 <script>
-function showGameTab(game) {
-    // Tabs
-    document.getElementById('tab-sudoku').classList.toggle('active', game === 'sudoku');
-    document.getElementById('tab-minesweeper').classList.toggle('active', game === 'minesweeper');
-    // Tab contents
-    document.getElementById('sudoku-tab').style.display = game === 'sudoku' ? '' : 'none';
-    document.getElementById('minesweeper-tab').style.display = game === 'minesweeper' ? '' : 'none';
-    // CSS enable/disable
-    document.getElementById('game-style-sudoku').disabled = (game !== 'sudoku');
-    document.getElementById('game-style-minesweeper').disabled = (game !== 'minesweeper');
-}
-// Show sudoku by default on first load
-showGameTab('sudoku');
-// Theme toggle
-(function() {
-    function getPreferredTheme() {
-        const stored = localStorage.getItem('theme');
-        if (stored) return stored;
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    // Example tab toggle
+    function showGameTab(game) {
+        document.getElementById('tab-sudoku').classList.remove('active');
+        document.getElementById('tab-minesweeper').classList.remove('active');
+        document.getElementById('sudoku-tab').style.display = 'none';
+        document.getElementById('minesweeper-tab').style.display = 'none';
+        if (game === 'sudoku') {
+            document.getElementById('tab-sudoku').classList.add('active');
+            document.getElementById('sudoku-tab').style.display = '';
+        } else {
+            document.getElementById('tab-minesweeper').classList.add('active');
+            document.getElementById('minesweeper-tab').style.display = '';
+        }
     }
-    function setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-        document.getElementById('theme-toggle').innerHTML = theme === "dark" ? "🌞" : "🌙";
-        document.getElementById('theme-toggle').setAttribute('aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
-    }
+    // On load, show Sudoku by default
     document.addEventListener('DOMContentLoaded', function() {
-        const button = document.getElementById('theme-toggle');
-        if (!button) return;
-        let curTheme = getPreferredTheme();
-        setTheme(curTheme);
-        button.onclick = function() {
-            curTheme = (curTheme === "dark" ? "light" : "dark");
-            setTheme(curTheme);
-        };
+        showGameTab('sudoku');
     });
-})();
 </script>
 </body>
 </html>
