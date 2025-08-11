@@ -2,29 +2,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: 100vw;
-    box-sizing: border-box;
 }
 .sudoku-board {
-    display: grid;
-    grid-template-columns: repeat(9, 2.3em);
-    grid-template-rows: repeat(9, 2.3em);
-    gap: 2px;
-    margin: 2em auto;
-    max-width: 100vw;
-    overflow-x: auto;
+    display: grid; grid-template-columns: repeat(9, 2.3em); grid-template-rows: repeat(9, 2.3em);
+    gap: 2px; margin: 2em auto;
 }
 .sudoku-cell {
-    background: #fff;
-    border: 1px solid #bbb;
-    font-size: 1.2em;
-    text-align: center;
-    outline: none;
-    width: 2.3em;
-    height: 2.3em;
-    box-sizing: border-box;
-    max-width: 100%;
+    background: #fff; border: 1px solid #bbb; font-size: 1.2em; text-align: center; outline: none;
 }
 .sudoku-cell:focus { border-color: #2980b9; }
 .sudoku-cell[readonly] { background: #ecf0f1; color: #34495e; font-weight: bold;}
@@ -33,19 +17,4 @@
 .cell-correct { background: #d4f9d2 !important; border-color: #27ae60 !important; }
 .cell-wrong { background: #ffeaea !important; border-color: #c0392b !important;}
 .controls { text-align:center; margin-bottom: 1.2em;}
-#message { margin-bottom: 1em; }
-@media (max-width: 600px) {
-    .sudoku-board {
-        grid-template-columns: repeat(9, minmax(1.7em, 1fr));
-        grid-template-rows: repeat(9, minmax(1.7em, 1fr));
-        margin: 1em auto;
-    }
-    .sudoku-cell {
-        font-size: 1em;
-        width: 1.7em;
-        height: 1.7em;
-    }
-    .controls {
-        font-size: 0.95em;
-    }
-}
+#message { margin-bottom: 1em;}
