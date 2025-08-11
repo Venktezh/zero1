@@ -55,37 +55,35 @@
         <a href="game.html" class="nav-item active">Game</a>
     </div>
 </nav>
-
 <!-- This bar appears only in the game page -->
 <div class="game-tabs">
     <button class="game-tab-btn active" id="tab-sudoku" onclick="showGameTab('sudoku')">Sudoku</button>
     <button class="game-tab-btn" id="tab-minesweeper" onclick="showGameTab('minesweeper')">Minesweeper</button>
 </div>
-
 <div id="sudoku-tab" class="game-tab-content"></div>
-<div id="minesweeper-tab" class="game-tab-content" style="display:none"></div>
+<div id="minesweeper-tab" class="game-tab-content" style="display:none">
     <div class="ms-glass-panel">
-    <div id="ms-heading-row">
-        <h2>Minesweeper</h2>
-        <div class="ms-streak-bar" id="streak-bar">
-            <span class="streak-icon">🔥</span>
-            <span class="streak-label">Streak:</span>
-            <span id="ms-streak-count">0</span>
+        <div id="ms-heading-row">
+            <h2>Minesweeper</h2>
+            <div class="ms-streak-bar" id="streak-bar">
+                <span class="streak-icon">🔥</span>
+                <span class="streak-label">Streak:</span>
+                <span id="ms-streak-count">0</span>
+            </div>
         </div>
-    </div>
-    <div id="mine-container">
-        <div id="game-options" style="margin-bottom:1.2em;">
-            <span>Level: Easy (9x9, 10 mines)</span>
-            <button class="btn ms-prem-btn" id="mineNewBtn">⟳ New Game</button>
-            <span id="mine-count"></span>
+        <div id="mine-container">
+            <div id="game-options" style="margin-bottom:1.2em;">
+                <span>Level: Easy (9x9, 10 mines)</span>
+                <button class="btn ms-prem-btn" id="mineNewBtn">⟳ New Game</button>
+                <span id="mine-count"></span>
+            </div>
+            <div id="board-wrap">
+                <div class="board" id="board"></div>
+            </div>
+            <div id="status" class="center"></div>
         </div>
-        <div id="board-wrap">
-            <div class="board" id="board"></div>
-        </div>
-        <div id="status" class="center"></div>
     </div>
 </div>
-
 <script src="sudoku.js"></script>
 <script src="minesweeper.js"></script>
 <script>
@@ -93,19 +91,15 @@ function showGameTab(game) {
     // Tabs
     document.getElementById('tab-sudoku').classList.toggle('active', game === 'sudoku');
     document.getElementById('tab-minesweeper').classList.toggle('active', game === 'minesweeper');
-
     // Tab contents
     document.getElementById('sudoku-tab').style.display = game === 'sudoku' ? '' : 'none';
     document.getElementById('minesweeper-tab').style.display = game === 'minesweeper' ? '' : 'none';
-
     // CSS enable/disable
     document.getElementById('game-style-sudoku').disabled = (game !== 'sudoku');
     document.getElementById('game-style-minesweeper').disabled = (game !== 'minesweeper');
 }
-
 // Show sudoku by default on first load
 showGameTab('sudoku');
-
 // Theme toggle
 (function() {
     function getPreferredTheme() {
