@@ -44,12 +44,12 @@
 }
 .ms-prem-btn:hover { filter: brightness(1.07) contrast(1.12); background:linear-gradient(93deg, #0996e3 65%, #fdcb6e 110%); }
 .ms-glass-panel h2 { color: #0857b4; font-weight: 700; letter-spacing:.011em; margin-bottom:0; }
-.board { 
+.board {
     display: grid;
     grid-template-columns: repeat(9, 2em);
     grid-template-rows: repeat(9, 2em);
     gap: 0;
-    background: #d1e4f9; 
+    background: #d1e4f9;
     border-radius: 7px;
     border: 2px solid #2887d3;
     box-shadow: 0 2px 16px #0984e324, 0 1px 10px #fff4;
@@ -106,9 +106,15 @@
         color: #fff !important;
         text-shadow: 0 1px 3px #2229;
     }
+    .board { background: #22262f !important; border-color: #1a99f8; }
+    .mine-cell { background: #263749 !important; color: #eaf6fa; }
 }
 @media (prefers-color-scheme: light) {
-  .ms-glass-panel       { background: #fbfbfd !important; }
-  .board                { background: #f7fbff !important; }
-  .mine-cell            { background: #fcfeff !important; }
+  .ms-glass-panel       { background: #fbfbfd !important; border: 1px solid #ececf3; }
+  .board                { background: #f7fbff !important; border-color: #b2d6ff; }
+  .mine-cell            { background: #fcfeff !important; color: #34495e; }
+  .ms-streak-bar        { color: #34495e !important; background: rgba(0,0,0,0.04); }
+  .ms-streak-bar .streak-label,
+  .ms-streak-bar .streak-icon,
+  #ms-streak-count     { color: #d35400 !important; text-shadow: none; }
 }
