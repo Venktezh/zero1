@@ -1,89 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Latest NSE Circulars</title>
-<style>
-    body { font-family: Arial, sans-serif; background: #f4f5f7; padding: 20px; }
-    h2 { color: #1a3c6e; }
-    input, button { padding: 5px; margin: 5px; }
-    table { border-collapse: collapse; width: 100%; background: #fff; }
-    th, td { border: 1px solid #ddd; padding: 8px; }
-    th { background: #1a3c6e; color: white; }
-    .error { color: red; }
-</style>
+    <meta charset="UTF-8">
+    <title>NSE Circulars (RSS)</title>
+    <style>
+        body { font-family: Arial, max-width:800px; margin:0 auto; background:#f5f7fb; color:#134d72;}
+        h1 { text-align: center; margin: 40px 0 24px;}
+        .circular {
+            background: #fff;
+            margin: 22px 0;
+            padding: 15px 19px;
+            border-radius: 8px;
+            box-shadow:0 2px 8px #0001;
+            border-left: 5px solid #2e6da4;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .circular-title { font-size:1.14em; font-weight: bold; color: #2e6da4;}
+        .circular-date  { color: #777; font-size:.96em; margin-bottom:4px; }
+        .circular-link  { color: #126118; text-decoration:underline;}
+        .circular-desc  { font-size:.98em; }
+        @media (max-width:600px) { body {padding: 10px;} }
+    </style>
 </head>
 <body>
-
-<h2>Latest NSE Circulars</h2>
-<label>From: <input type="date" id="fromDate"></label>
-<label>To: <input type="date" id="toDate"></label>
-<input type="text" id="keyword" placeholder="Search keyword...">
-<button onclick="fetchCirculars()">Search</button>
-
-<p id="error" class="error"></p>
-<table id="circularTable">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Title</th>
-            <th>Link</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
-
-<script>
-const API_URL = 'http://localhost:3000/api/circulars';
-
-function formatDate(date) {
-    return date.toISOString().split('T')[0];
-}
-
-async function fetchCirculars() {
-    document.getElementById('error').textContent = '';
-    const from = document.getElementById('fromDate').value;
-    const to = document.getElementById('toDate').value;
-    const keyword = document.getElementById('keyword').value;
-
+    <h1>Latest NSE Circulars (RSS)</h1>
+    <div id="feed">Loading...</div>
+    <script>
+async function loadRSS() {
+    const url = "https://nsearchives.nseindia.com/content/RSS/Circulars.xml";
+    const apiurl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
     try {
-        const res = await fetch(`${API_URL}?from=${from}&to=${to}&keyword=${encodeURIComponent(keyword)}`);
-        if (!res.ok) throw new Error('Failed to fetch');
+        const res = await fetch(apiurl);
+        if(!res.ok) throw "RSS2JSON failed";
         const data = await res.json();
-
-        const tbody = document.querySelector('#circularTable tbody');
-        tbody.innerHTML = '';
-
-        if (data && data.data && data.data.length > 0) {
-            data.data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.date}</td>
-                    <td>${item.subject}</td>
-                    <td><a href="${item.pdfLink}" target="_blank">PDF</a></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        } else {
-            tbody.innerHTML = '<tr><td colspan="3">No circulars found</td></tr>';
-        }
-    } catch (err) {
-        document.getElementById('error').textContent = 'Error: ' + err.message;
+        let html = "";
+        // Filter for items from the last 7 days
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const weeklyItems = (data.items || []).filter(item => {
+          const pub = new Date(item.pubDate);
+          return pub >= weekAgo && pub <= now;
+        });
+        if(weeklyItems.length === 0)
+            html = "No circulars in the last 7 days!";
+        else
+            html = weeklyItems.map(item => `
+                <div class="circular">
+                    <div class="circular-title">
+                        <a class="circular-link" href="${item.link}" target="_blank">${item.title}</a>
+                    </div>
+                    <div class="circular-date">${new Date(item.pubDate).toLocaleDateString("en-IN")}</div>
+                    <div class="circular-desc">${item.description ? item.description : '<em>No summary available.</em>'}</div>
+                </div>
+            `).join("");
+        document.getElementById("feed").innerHTML = html;
+    } catch(e) {
+        document.getElementById("feed").innerHTML = "<span style='color:#b41a1a;'>Failed to load circulars. Try again later.</span>";
     }
 }
-
-// Auto-load last 7 days data
-document.addEventListener('DOMContentLoaded', () => {
-    const today = new Date();
-    const lastWeek = new Date();
-    lastWeek.setDate(today.getDate() - 7);
-
-    document.getElementById('fromDate').value = formatDate(lastWeek);
-    document.getElementById('toDate').value = formatDate(today);
-
-    fetchCirculars();
-});
+loadRSS();
 </script>
-
 </body>
 </html>
