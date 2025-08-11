@@ -5,41 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClearCache | Dashboard</title>
     <link rel="stylesheet" href="theme.css">
-    <style>
-        @media (max-width: 800px) {
-            .dashboard {
-                flex-direction: column;
-                gap: 1.5em;
-            }
-            .dashboard-left, .dashboard-right {
-                width: 100%;
-                min-width: 0;
-                box-sizing: border-box;
-            }
-            .file-input-wrapper {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-        @media (max-width: 600px) {
-            .nav-container {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .nav-item {
-                padding: 1em 0.5em;
-                text-align: center;
-                font-size: 1.1em;
-            }
-            .dashboard-section, .dashboard-left, .dashboard-right {
-                padding-left: 0.5em;
-                padding-right: 0.5em;
-            }
-            header {
-                padding: 0.5em 0;
-            }
-        }
-    </style>
 </head>
 <body>
     <header style="position:relative;">
@@ -70,11 +35,11 @@
                 <p>Optimize your system performance with our cache tools.</p>
                 <h4>Payout Cache-clear</h4>
                 <p style="margin-top:0;">Just gives you the output file.</p>
-                <div class="file-input-wrapper" style="display:flex; gap:0.5em; align-items:center;">
+                <div class="file-input-wrapper">
                     <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
                     <span id="fileName">No file chosen</span>
                 </div>
-                <input type="file" id="fileInput" accept=".txt" style="margin-top:0.5em;">
+                <input type="file" id="fileInput" accept=".txt">
                 <div id="result"></div>
                 <a id="downloadLink" class="btn">Download Results</a>
             </div>
@@ -103,20 +68,50 @@
                     const lines = e.target.result.split(/\r?\n/).filter(line => line.trim());
                     const data = lines.map(line => line.split(',')[0].trim()).filter(Boolean);
                     if (data.length > 0) {
-                        result.textContent = `Found ${data.length} entries.`;
-                        const blob = new Blob([data.join('\n')], { type: "text/plain" });
+                        const now = new Date();
+                        const formattedDate = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}`;
+                        const csvContent = data.join('\n');
+                        const blob = new Blob([csvContent], { type: 'text/csv' });
                         downloadLink.href = URL.createObjectURL(blob);
-                        downloadLink.download = "output.txt";
-                        downloadLink.style.display = "inline-block";
-                        downloadLink.textContent = "Download Results";
+                        downloadLink.download = `CacheClear_${formattedDate}.csv`;
+                        downloadLink.style.display = 'block';
+                        result.innerHTML = `<span class="success">Processed ${data.length} entries</span>`;
                     } else {
-                        result.textContent = "No valid data found.";
-                        downloadLink.style.display = "none";
+                        result.innerHTML = `<span class="error">No valid data found</span>`;
+                        downloadLink.style.display = 'none';
                     }
                 };
                 reader.readAsText(file);
+            } else {
+                fileName.textContent = "No file chosen";
+                result.textContent = "";
+                downloadLink.style.display = 'none';
             }
         });
+        // Theme toggle
+        (function() {
+            function getPreferredTheme() {
+                const stored = localStorage.getItem('theme');
+                if (stored) return stored;
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                document.getElementById('theme-toggle').innerHTML = theme === "dark" ? "🌞" : "🌙";
+                document.getElementById('theme-toggle').setAttribute('aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                const button = document.getElementById('theme-toggle');
+                if (!button) return;
+                let curTheme = getPreferredTheme();
+                setTheme(curTheme);
+                button.onclick = function() {
+                    curTheme = (curTheme === "dark" ? "light" : "dark");
+                    setTheme(curTheme);
+                };
+            });
+        })();
     </script>
 </body>
 </html>
