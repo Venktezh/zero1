@@ -3,39 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClearCache | Circulars</title>
+    <title>ClearCache | Dashboard</title>
     <link rel="stylesheet" href="theme.css">
-    <style>
-        /* Override or complement your theme.css for circulars rendering */
-        .circulars-section { margin: 36px auto 36px auto; max-width: 820px;}
-        .group-block { margin-bottom:32px; }
-        .group-title {
-            color: #fff;
-            background: #2e6da4;
-            padding: 10px 20px;
-            border-radius:7px 7px 0 0;
-            font-size: 1.17em;
-            font-weight: bold;
-            margin-bottom: 0;
-            letter-spacing: 0.5px;
-        }
-        .circular {
-            background: #fff;
-            margin: 0 0 13px 0;
-            padding: 15px 19px;
-            border-radius: 0 0 8px 8px;
-            box-shadow:0 2px 7px #0001;
-            border-left: 5px solid #2e6da4;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .circular-title { font-size:1.11em; font-weight: bold; color: #2e6da4;}
-        .circular-date  { color: #777; font-size:.97em; }
-        .circular-link  { color: #126118; text-decoration:underline;}
-        .circular-desc  { font-size:.99em; }
-        @media (max-width:600px) { .circulars-section {padding: 7px;} .group-title {font-size:1em; padding:8px 6px;} }
-    </style>
 </head>
 <body>
     <header style="position:relative;">
@@ -49,24 +18,77 @@
     </header>
     <nav aria-label="Main navigation">
         <div class="nav-container">
-            <a href="index.html" class="nav-item">Home</a>
+            <a href="index.html" class="nav-item active">Home</a>
             <a href="about.html" class="nav-item">About</a>
-            <a href="circulars.html" class="nav-item active">Circulars</a>
+            <a href="circulars.html" class="nav-item">Circulars</a>
             <a href="game.html" class="nav-item">Game</a>
         </div>
     </nav>
-    <main class="circulars-section">
-        <h2 style="text-align:center;">Today's NSE Circulars</h2>
-        <div id="feed" style="margin-bottom:40px;">Loading circulars…</div>
+    <main class="dashboard">
+        <div class="dashboard-left">
+            <h2>Clean Interface</h2>
+            <p>This minimalist design prioritizes content and functionality. Every element serves a purpose.</p>
+        </div>
+        <div class="dashboard-right">
+            <div class="cache-box">
+                <h3>Cache Management</h3>
+                <p>Optimize your system performance with our cache tools.</p>
+                <h4>Payout Cache-clear</h4>
+                <p style="margin-top:0;">Just gives you the output file.</p>
+                <div class="file-input-wrapper">
+                    <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                    <span id="fileName">No file chosen</span>
+                </div>
+                <input type="file" id="fileInput" accept=".txt">
+                <div id="result"></div>
+                <a id="downloadLink" class="btn">Download Results</a>
+            </div>
+        </div>
     </main>
+    <section class="dashboard-section">
+        <h2>System Ready</h2>
+        <p>All components operational. Designed for simplicity and efficiency.</p>
+    </section>
     <footer>
         <p>© ClearCache <span id="year"></span> | Venktezh</p>
     </footer>
     <script>
         // Auto-update year in footer
         document.getElementById('year').textContent = new Date().getFullYear();
-
-        // Theme toggle logic
+        // File processing logic
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileName = document.getElementById('fileName');
+            const result = document.getElementById('result');
+            const downloadLink = document.getElementById('downloadLink');
+            if (file) {
+                fileName.innerHTML = `<span style="font-size:0.93em;color:var(--secondary);">${file.name}</span>`;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const lines = e.target.result.split(/\r?\n/).filter(line => line.trim());
+                    const data = lines.map(line => line.split(',')[0].trim()).filter(Boolean);
+                    if (data.length > 0) {
+                        const now = new Date();
+                        const formattedDate = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}`;
+                        const csvContent = data.join('\n');
+                        const blob = new Blob([csvContent], { type: 'text/csv' });
+                        downloadLink.href = URL.createObjectURL(blob);
+                        downloadLink.download = `CacheClear_${formattedDate}.csv`;
+                        downloadLink.style.display = 'block';
+                        result.innerHTML = `<span class="success">Processed ${data.length} entries</span>`;
+                    } else {
+                        result.innerHTML = `<span class="error">No valid data found</span>`;
+                        downloadLink.style.display = 'none';
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                fileName.textContent = "No file chosen";
+                result.textContent = "";
+                downloadLink.style.display = 'none';
+            }
+        });
+        // Theme toggle
         (function() {
             function getPreferredTheme() {
                 const stored = localStorage.getItem('theme');
@@ -77,8 +99,7 @@
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('theme', theme);
                 document.getElementById('theme-toggle').innerHTML = theme === "dark" ? "🌞" : "🌙";
-                document.getElementById('theme-toggle').setAttribute(
-                    'aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+                document.getElementById('theme-toggle').setAttribute('aria-label', theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
             }
             document.addEventListener('DOMContentLoaded', function() {
                 const button = document.getElementById('theme-toggle');
@@ -91,78 +112,6 @@
                 };
             });
         })();
-
-        // NSE Circulars fetching logic (today's only, grouped)
-        async function loadRSS() {
-            const url = "https://nsearchives.nseindia.com/content/RSS/Circulars.xml";
-            const apiurl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
-            const groupDefs = [
-                {
-                    title: "IPO / Listing Circulars (including SME IPO)",
-                    keywords: ["IPO", "listing", "SME IPO"]
-                },
-                {
-                    title: "ASM / ESM / ST-ASM Circulars",
-                    keywords: ["ASM", "ESM", "ST-ASM"]
-                },
-            ];
-            const grouped = [[],[]], rest = [];
-            try {
-                const res = await fetch(apiurl);
-                if(!res.ok) throw new Error("Could not fetch.");
-                const data = await res.json();
-
-                // Set up time range for TODAY
-                const today = new Date();
-                today.setHours(0,0,0,0); // Midnight today
-                const tomorrow = new Date(today);
-                tomorrow.setDate(today.getDate() + 1);
-
-                for (const item of (data.items || [])) {
-                    const pub = new Date(item.pubDate);
-                    // Keep only circulars for today
-                    if(pub < today || pub >= tomorrow) continue;
-                    const titleDesc = (item.title + " " + item.description).toLowerCase();
-                    let matched = false;
-                    for(let i=0;i<groupDefs.length;i++) {
-                        for(const kw of groupDefs[i].keywords) {
-                            if(titleDesc.includes(kw.toLowerCase())) {
-                                grouped[i].push(item);
-                                matched = true;
-                                break;
-                            }
-                        }
-                        if(matched) break;
-                    }
-                    if(!matched) rest.push(item);
-                }
-
-                const renderCircular = item => `
-                    <div class="circular">
-                        <div class="circular-title"><a class="circular-link" href="${item.link}" target="_blank">${item.title}</a></div>
-                        <div class="circular-date">${new Date(item.pubDate).toLocaleDateString("en-IN")}</div>
-                        <div class="circular-desc">${item.description ? item.description : "<em>No summary available.</em>"}</div>
-                    </div>
-                `;
-                let html = "";
-                for (let i=0; i<groupDefs.length; i++) {
-                    if(grouped[i].length) {
-                        html += `<div class="group-block"><div class="group-title">${groupDefs[i].title}</div>`;
-                        html += grouped[i].map(renderCircular).join("") + "</div>";
-                    }
-                }
-                if(rest.length) {
-                    html += `<div class="group-block"><div class="group-title" style="background:#4f4f4f;">Other Circulars</div>`;
-                    html += rest.map(renderCircular).join("") + "</div>";
-                }
-                if(!html) html = "<em>No circulars found for today!</em>";
-                document.getElementById("feed").innerHTML = html;
-            } catch(e) {
-                document.getElementById("feed").innerHTML = `<span style='color:#c03232;'>Could not load circulars. Try reloading.</span>`;
-                console.error(e)
-            }
-        }
-        loadRSS();
     </script>
 </body>
 </html>
