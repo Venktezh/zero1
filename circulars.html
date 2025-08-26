@@ -6,25 +6,17 @@
   <title>ClearCache | Circulars</title>
   <link rel="stylesheet" href="theme.css">
   <style>
-    .circulars-section {
-      max-width: 900px; margin: 48px auto 32px; padding: 0 12px 32px;
-      border-radius: 14px; background: var(--panel-bg,#f5f7fb); box-shadow: 0 2px 18px #0001;
-    }
-    .circulars-section h2 {
-      font-size: 2rem; font-weight: 700; text-align: center; color: var(--primary,#134d72);
-      margin: 0 0 6px; letter-spacing: 1px;
-    }
-    .subnote { text-align:center; color:#667; margin:0 0 28px; font-size:.92rem; }
-    .group-block { margin-bottom: 32px;}
+    .circulars-section { max-width: 900px; margin: 48px auto 32px; padding: 0 12px 32px; border-radius: 14px; background: var(--panel-bg,#f5f7fb); box-shadow: 0 2px 18px #0001; }
+    .circulars-section h2 { font-size: 2rem; font-weight: 700; text-align: center; color: var(--primary,#134d72); margin: 0 0 6px; letter-spacing: 1px; }
+    .exchange-title { font-size:1.35rem; font-weight: 800; color: var(--primary,#134d72); text-align:center; margin: 26px 0 8px; }
+    .subnote { text-align:center; color:#667; margin:0 0 22px; font-size:.92rem; }
+    .group-block { margin-bottom: 32px; }
     .group-title { color:#fff; background:#2e6da4; padding:10px 20px; border-radius:7px 7px 0 0; font-weight:700; }
-    .circular {
-      background:var(--card-bg,#fff); margin:0 0 13px; padding:15px 19px; border-radius:0 0 8px 8px;
-      box-shadow:0 2px 7px #0001; border-left:5px solid #2e6da4; display:flex; flex-direction:column; gap:5px;
-    }
-    .circular-title { font-size:1.12em; font-weight:700; color:#2e6da4; }
-    .circular-date  { color:#888; font-size:.96em; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;}
+    .circular { background:var(--card-bg,#fff); margin:0 0 13px; padding:15px 19px; border-radius:0 0 8px 8px; box-shadow:0 2px 7px #0001; border-left:5px solid #2e6da4; display:flex; flex-direction:column; gap:5px; }
+    .circular-title { font-size:1.05em; font-weight:700; color:#2e6da4; }
+    .circular-date  { color:#888; font-size:.95em; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace; }
     .circular-link  { color:#126118; text-decoration:underline; }
-    .circular-desc  { font-size:.99em; color:var(--primary); }
+    .circular-desc  { font-size:.98em; color:var(--primary); }
     .empty { color:var(--primary,#134d72); font-style:italic; }
     .error { color:#c03232; }
     @media (max-width:600px){ .circulars-section{padding:7px;} .group-title{font-size:1em;padding:8px 6px;} .circulars-section h2{font-size:1.2em;} }
@@ -51,9 +43,17 @@
 
   <main>
     <section class="circulars-section">
-      <h2>NSE Circulars (Last 24 hours)</h2>
-      <p id="window-note" class="subnote">Window: —</p>
-      <div id="feed" style="margin-bottom:40px;min-height:70px;">Loading circulars…</div>
+      <h2>Exchange Circulars (Last 24 hours)</h2>
+      <div id="nse-area">
+        <div class="exchange-title">NSE</div>
+        <p id="nse-window" class="subnote">Window: —</p>
+        <div id="nse-feed" style="margin-bottom:24px;min-height:70px;">Loading NSE…</div>
+      </div>
+      <div id="bse-area">
+        <div class="exchange-title">BSE</div>
+        <p id="bse-window" class="subnote">Window: —</p>
+        <div id="bse-feed" style="margin-bottom:24px;min-height:70px;">Loading BSE…</div>
+      </div>
     </section>
   </main>
 
@@ -81,92 +81,85 @@
       });
     })();
 
-    // ---------- Timezone helpers (IST-safe without double-shifting) ----------
-    // getTimezoneOffset(): minutes to add to local time to get UTC (e.g. IST = -330)
-    const IST_OFFSET_MIN = -330;
+    // --------- Time helpers (IST window, no double-shift) ----------
+    const IST_OFFSET_MIN = -330; // minutes (Date.getTimezoneOffset() convention)
     function toIST(date){
-      const localOffsetMin = date.getTimezoneOffset();         // varies by user
-      const deltaMin = IST_OFFSET_MIN - localOffsetMin;        // how much to move local time to be IST
+      const localOffsetMin = date.getTimezoneOffset(); // varies by user
+      const deltaMin = IST_OFFSET_MIN - localOffsetMin;
       return new Date(date.getTime() + deltaMin*60*1000);
     }
     function formatIST(d){
       return d.toLocaleString("en-IN", {
         day:"2-digit", month:"short", year:"numeric",
-        hour:"2-digit", minute:"2-digit", hour12:false, timeZone: undefined
+        hour:"2-digit", minute:"2-digit", hour12:false
       }) + " IST";
     }
-
-    // ---------- Robust date parsing (handles RSS, ISO, and common BSE styles) ----------
-    function parseDateFlexible(s){
-      if (!s) return null;
-      // 1) Native parse (covers RFC822/RSS + ISO 8601)
-      const n = new Date(s);
-      if (!isNaN(n)) return n;
-
-      // 2) DD-MMM-YYYY [HH:MM] (e.g., 26 Aug 2025 13:57 or 26-Aug-2025 13:57)
-      let m = s.match(/^(\d{1,2})[ -](\w{3})[ -](\d{4})(?:[ ,T]+(\d{1,2}):(\d{2}))?/i);
-      if (m){
-        const [ , d, mon, y, hh='00', mm='00' ] = m;
-        const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-        const mi = months[mon.toLowerCase()];
-        if (mi>=0) return new Date(Date.UTC(+y, mi, +d, +hh, +mm)); // as UTC; timezone will be handled by toIST()
-      }
-      // 3) DD/MM/YYYY or DD-MM-YYYY
-      m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-      if (m){
-        const [ , d, mth, y ] = m;
-        return new Date(Date.UTC(+y, +mth-1, +d, 0, 0));
-      }
-      return null; // could not parse
+    function last24hISTWindow(){
+      const nowIST = toIST(new Date());
+      const startIST = new Date(nowIST.getTime() - 24*60*60*1000);
+      return {startIST, nowIST};
     }
-
-    // ---------- Fetch & render (NSE) ----------
-    const NSE_RSS = "https://nsearchives.nseindia.com/content/RSS/Circulars.xml";
-    const RSS2JSON = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NSE_RSS)}`;
-
+    function withinLast24hIST(pubUTC){
+      const {startIST, nowIST} = last24hISTWindow();
+      const pubIST = toIST(pubUTC);
+      return pubIST >= startIST && pubIST <= nowIST;
+    }
     function stripHTML(html){
       const div=document.createElement('div'); div.innerHTML=html||'';
       return (div.textContent||div.innerText||'').replace(/\s+/g,' ').trim();
     }
-
-    function withinLast24hIST(pubDateUTC){
-      // Convert the *user's local view* of pubDate into IST-equivalent wall time
-      const pubIST = toIST(pubDateUTC);
-      const nowIST = toIST(new Date());
-      const startIST = new Date(nowIST.getTime() - 24*60*60*1000);
-      return pubIST >= startIST && pubIST <= nowIST;
+    function parseDateFlexible(s){
+      if (!s) return null;
+      const d = new Date(s);
+      if (!isNaN(d)) return d;
+      let m = s.match(/^(\d{1,2})[ -](\w{3})[ -](\d{4})(?:[ ,T]+(\d{1,2}):(\d{2}))?/i);
+      if (m){
+        const [ , dd, mon, yyyy, hh='00', mm='00' ] = m;
+        const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+        const mi = months[mon.toLowerCase()];
+        if (mi>=0) return new Date(Date.UTC(+yyyy, mi, +dd, +hh, +mm));
+      }
+      m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+      if (m){
+        const [ , dd, mm, yyyy ] = m;
+        return new Date(Date.UTC(+yyyy, +mm-1, +dd, 0, 0));
+      }
+      return null;
     }
 
-    async function loadNSELast24h(){
-      const feedEl = document.getElementById("feed");
+    // --------- NSE (direct RSS via CORS-safe proxy) ----------
+    const NSE_RSS = "https://nsearchives.nseindia.com/content/RSS/Circulars.xml";
+    const PROXY = "https://r.jina.ai/http/"; // read-only fetcher with permissive CORS
+    async function loadNSE(){
+      const feedEl = document.getElementById("nse-feed");
+      const {startIST, nowIST} = last24hISTWindow();
+      document.getElementById('nse-window').textContent = `Window: ${formatIST(startIST)} → ${formatIST(nowIST)}`;
+
       try{
-        const nowIST = toIST(new Date());
-        const startIST = new Date(nowIST.getTime() - 24*60*60*1000);
-        document.getElementById('window-note').textContent =
-          `Window: ${formatIST(startIST)} → ${formatIST(nowIST)}`;
-
-        const res = await fetch(RSS2JSON, { headers:{ 'User-Agent':'Mozilla/5.0' } });
+        const res = await fetch(PROXY + NSE_RSS, { headers:{ 'User-Agent':'Mozilla/5.0' } });
         if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const xml = await res.text();
+        const dom = new DOMParser().parseFromString(xml, "text/xml");
+        const nodes = Array.from(dom.querySelectorAll("item"));
 
-        // Parse dates robustly, then filter using the IST window
-        const items = (data.items||[])
-          .map(it => {
-            const d = parseDateFlexible(it.pubDate);
-            return d ? { ...it, _pub: d } : null;
-          })
-          .filter(Boolean)
-          .filter(it => withinLast24hIST(it._pub))
-          .sort((a,b) => b._pub - a._pub);
+        const items = nodes.map(n => ({
+          title: n.querySelector("title")?.textContent?.trim() || "Untitled",
+          link:  n.querySelector("link")?.textContent?.trim()  || "#",
+          pubDateRaw: n.querySelector("pubDate")?.textContent?.trim() || "",
+          description: n.querySelector("description")?.textContent || ""
+        }))
+        .map(it => ({...it, pub: parseDateFlexible(it.pubDateRaw)}))
+        .filter(it => it.pub && withinLast24hIST(it.pub))
+        .sort((a,b) => b.pub - a.pub);
 
-        // Grouping
+        // Grouping like your original
         const groupDefs = [
           { title:"IPO / Listing Circulars (including SME IPO)", keywords:["IPO","listing","SME IPO"] },
           { title:"ASM / ESM / ST-ASM Circulars",               keywords:["ASM","ESM","ST-ASM"] },
         ];
         const grouped = [[],[]], rest=[];
         for(const it of items){
-          const text = `${it.title||""} ${it.description||""}`.toLowerCase();
+          const text = `${it.title} ${it.description}`.toLowerCase();
           let matched = false;
           for(let i=0;i<groupDefs.length;i++){
             for(const kw of groupDefs[i].keywords){
@@ -180,10 +173,10 @@
         const render = (it)=>{
           const wrap=document.createElement('div'); wrap.className='circular';
           const title=document.createElement('div'); title.className='circular-title';
-          const a=document.createElement('a'); a.className='circular-link'; a.href=it.link; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=it.title||"Untitled";
+          const a=document.createElement('a'); a.className='circular-link'; a.href=it.link; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=it.title;
           title.appendChild(a);
-          const date=document.createElement('div'); date.className='circular-date'; date.textContent = formatIST(toIST(it._pub));
-          const desc=document.createElement('div'); desc.className='circular-desc'; desc.textContent = stripHTML(it.description||it.content||"No summary available.");
+          const date=document.createElement('div'); date.className='circular-date'; date.textContent = formatIST(toIST(it.pub));
+          const desc=document.createElement('div'); desc.className='circular-desc'; desc.textContent = stripHTML(it.description)||"No summary available.";
           wrap.append(title,date,desc);
           return wrap;
         };
@@ -208,11 +201,78 @@
         }
       } catch(e){
         console.error(e);
-        document.getElementById("feed").innerHTML = `<span class='error'>Could not load circulars. Try reloading.</span>`;
+        document.getElementById("nse-feed").innerHTML = `<span class='error'>Could not load NSE circulars.</span>`;
       }
     }
 
-    loadNSELast24h();
+    // --------- BSE (renders page via proxy, extract links + subjects) ----------
+    // We read the public Notices/Circulars page through the read-only proxy and mine links.
+    const BSE_PAGE = "https://www.bseindia.com/markets/MarketInfo/NoticesCirculars.aspx?id=0&txtscripcd=&pagecont=&subject=";
+    async function loadBSE(){
+      const feedEl = document.getElementById("bse-feed");
+      const {startIST, nowIST} = last24hISTWindow();
+      document.getElementById('bse-window').textContent = `Window: ${formatIST(startIST)} → ${formatIST(nowIST)}`;
+
+      try{
+        const res = await fetch(PROXY + BSE_PAGE, { headers:{ 'User-Agent':'Mozilla/5.0' } });
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+
+        // The proxy outputs a readable/markdown-ish page. Extract [title](url) pairs pointing to bseindia.com
+        const linkRegex = /\[([^\]]+)\]\((https?:\/\/(?:www\.)?bseindia\.com[^\)]+)\)/gi;
+        const candidates = [];
+        let m;
+        while ((m = linkRegex.exec(text)) !== null) {
+          const title = m[1].replace(/\s+/g,' ').trim();
+          const url = m[2];
+          // Only keep likely notice/circular links (pdf/details pages usually carry a yyyymmdd in the path or query)
+          const dmatch = url.match(/([/=_-])(\d{8})(?=[-_])/);
+          const linkYMD = dmatch ? dmatch[2] : null;
+          candidates.push({ title, url, linkYMD });
+        }
+
+        // Build items with a "best-effort" date:
+        // 1) If link has yyyymmdd, use that as the date (UTC 00:00) — works well for BSE.
+        // 2) Otherwise try to sniff a date inside the title (e.g., "26 Aug 2025").
+        const items = candidates.map(c => {
+          let pub = null;
+          if (c.linkYMD){
+            const y = +c.linkYMD.slice(0,4), m = +c.linkYMD.slice(4,6)-1, d = +c.linkYMD.slice(6,8);
+            pub = new Date(Date.UTC(y,m,d,0,0));
+          } else {
+            pub = parseDateFlexible(c.title);
+          }
+          return { title:c.title, link:c.url, pub };
+        })
+        .filter(it => it.pub && withinLast24hIST(it.pub))
+        .sort((a,b)=> b.pub - a.pub);
+
+        const render = (it)=>{
+          const wrap=document.createElement('div'); wrap.className='circular';
+          const title=document.createElement('div'); title.className='circular-title';
+          const a=document.createElement('a'); a.className='circular-link'; a.href=it.link; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=it.title || "BSE Notice";
+          title.appendChild(a);
+          const date=document.createElement('div'); date.className='circular-date'; date.textContent = formatIST(toIST(it.pub));
+          const desc=document.createElement('div'); desc.className='circular-desc'; desc.textContent = "Notice / Circular";
+          wrap.append(title,date,desc);
+          return wrap;
+        };
+
+        feedEl.innerHTML = "";
+        if (!items.length){
+          feedEl.innerHTML = "<em class='empty'>No BSE circulars found in the last 24 hours.</em>";
+          return;
+        }
+        items.forEach(x => feedEl.appendChild(render(x)));
+      } catch(e){
+        console.error(e);
+        document.getElementById("bse-feed").innerHTML = `<span class='error'>Could not load BSE circulars.</span>`;
+      }
+    }
+
+    // Run both
+    loadNSE();
+    loadBSE();
   </script>
 </body>
 </html>
