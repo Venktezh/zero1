@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>CSV Deduplicate • Split • Combine</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+  :root { --bg:#0b0d12; --card:#121722; --muted:#9fb0c3; --text:#e9eef4; --accent:#71b7ff; --ok:#5bd19b; --warn:#ffb15e; --err:#ff6a6a; --bar:#2a3b57; }
+  html,body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif; margin:0; }
+  header { padding:20px; border-bottom:1px solid #1c2230; }
+  h1 { margin:0; font-size:20px; }
+  .wrap { max-width:1100px; margin:0 auto; padding:18px; }
+  .card { background:var(--card); border:1px solid #1c2230; border-radius:12px; padding:16px; margin-bottom:16px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+  label { font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
+  input[type="number"], input[type="text"], select { background:#0c121c; color:var(--text); border:1px solid #223047; padding:10px 12px; border-radius:10px; min-width:180px; }
+  input[type="file"]{ color:var(--muted); }
+  button { background:#152238; color:#fff; border:1px solid #2a3b57; padding:10px 14px; border-radius:10px; cursor:pointer; }
+  button.primary { background:#1e3355; border-color:#35507d; }
+  button:disabled { opacity:.6; cursor:not-allowed; }
+  .muted { color:#9fb0c3; }
+  .grid { display:grid; grid-template-columns: 1fr auto auto; gap:8px; }
+  .files { border-top:1px solid #1c2230; margin-top:10px; padding-top:10px; }
+  .progress { white-space:pre-wrap; background:#0c121c; border:1px solid #223047; border-radius:10px; padding:12px; max-height:260px; overflow:auto; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12px; }
+  .statusbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .statuschip { font-size:12px; border:1px solid #2a3b57; padding:4px 10px; border-radius:999px; color:var(--muted); }
+  .statuschip.running { color:#e7f0ff; border-color:#3b5a8a; }
+  .statuschip.done { color:#5bd19b; border-color:#2e6a53; }
+  .indbar { height:6px; background:#0c121c; border:1px solid #223047; border-radius:999px; overflow:hidden; }
+  .indbar>div { height:100%; width:35%; background:var(--bar); animation: ind 1.2s linear infinite; }
+  @keyframes ind { 0%{transform:translateX(-100%)} 100%{transform:translateX(300%)} }
+  .footer { position: sticky; bottom: 0; z-index: 5; background: rgba(18,23,34,.95); border-top: 1px solid #1c2230; padding: 12px 18px; backdrop-filter: blur(6px); }
+  .footer .wrap { display:flex; align-items:center; justify-content:space-between; padding:0; }
+  .footer .actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .links a { display:inline-block; margin:6px 10px 0 0; text-decoration:none; color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="statusbar">
+      <h1>CSV Deduplicate • Split • Combine</h1>
+      <div id="statusChip" class="statuschip">Idle</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Upload CSV files (multiple)</label>
+        <input id="fileInput" type="file" accept=".csv,text/csv" multiple />
+      </div>
+      <div>
+        <label>Rows per split file</label>
+        <input id="rowsPerSplit" type="number" min="1" step="1" value="2000000" />
+      </div>
+      <div>
+        <label>Delimiter</label>
+        <select id="delimiter">
+          <option value="auto">Auto detect</option>
+          <option value=",">Comma (,)</option>
+          <option value=";">Semicolon (;)</option>
+          <option value="\t">Tab</option>
+          <option value="|">Pipe (|)</option>
+        </select>
+      </div>
+      <div>
+        <label>Unique export mode</label>
+        <select id="uniqueMode">
+          <option value="firstcol">First column only</option>
+          <option value="fullrows">Full rows (dedup by first col)</option>
+        </select>
+      </div>
+      <div>
+        <label>First column name in outputs</label>
+        <input id="uniqueHeader" type="text" value="client_id" />
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <button id="dedupBtn" class="primary">1) Deduplicate (first column)</button>
+      <button id="splitBtn">2) Split each file</button>
+      <button id="combineBtn">3) Combine selected ➜ One file</button>
+    </div>
+
+    <div class="files" id="fileList"></div>
+  </div>
+
+  <div class="card">
+    <div class="statusbar" style="margin-bottom:8px;">
+      <strong>Progress</strong>
+      <div id="indBar" class="indbar" style="display:none;"><div></div></div>
+    </div>
+    <div id="log" class="progress" aria-live="polite"></div>
+    <div class="links" id="links"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="wrap">
+    <div class="muted" id="footerMsg">No task running.</div>
+    <div class="actions">
+      <button id="zipAllBtn" class="primary">Download ZIP (All Outputs)</button>
+      <button id="downloadAllBtn">Download All Files</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const logEl = document.getElementById('log');
+  const linksEl = document.getElementById('links');
+  const fileInput = document.getElementById('fileInput');
+  const fileList = document.getElementById('fileList');
+  const rowsPerSplitEl = document.getElementById('rowsPerSplit');
+  const delimiterEl = document.getElementById('delimiter');
+  const uniqueModeEl = document.getElementById('uniqueMode');
+  const uniqueHeaderEl = document.getElementById('uniqueHeader');
+
+  const dedupBtn = document.getElementById('dedupBtn');
+  const splitBtn = document.getElementById('splitBtn');
+  const combineBtn = document.getElementById('combineBtn');
+  const zipAllBtn = document.getElementById('zipAllBtn');
+  const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+  const statusChip = document.getElementById('statusChip');
+  const indBar = document.getElementById('indBar');
+  const footerMsg = document.getElementById('footerMsg');
+
+  function human(n){ return Number(n).toLocaleString(); }
+  function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scrollHeight; }
+  function clearLog(){ logEl.textContent = ''; }
+  function clearLinks(){ linksEl.innerHTML = ''; }
+
+  function startTask(label){
+    statusChip.textContent = `Running: ${label}`;
+    statusChip.classList.remove('done'); statusChip.classList.add('running');
+    indBar.style.display = 'block';
+    footerMsg.textContent = `Running: ${label}`;
+    document.title = `⏳ ${label}`;
+  }
+  function endTask(label){
+    statusChip.textContent = `Completed: ${label}`;
+    statusChip.classList.remove('running'); statusChip.classList.add('done');
+    indBar.style.display = 'none';
+    log(``); log(`✓ Completed "${label}" at ${new Date().toLocaleTimeString()}`); log(``);
+    footerMsg.textContent = `✅ ${label} — Completed`;
+    document.title = `✅ ${label}`;
+  }
+  function taskError(label, err){
+    statusChip.textContent = `Error: ${label}`;
+    statusChip.classList.remove('running','done');
+    indBar.style.display = 'none';
+    footerMsg.textContent = `❗ ${label} failed`;
+    log(`Error: ${err?.message || err}`);
+    document.title = `❗ ${label}`;
+  }
+
+  let lastDownloads = [];
+  function remember(name, blob){
+    const url = URL.createObjectURL(blob);
+    lastDownloads.push({name, blob, url});
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.textContent = `Download ${name}`;
+    linksEl.appendChild(a);
+  }
+  function resetDownloads(){
+    lastDownloads.forEach(f=>URL.revokeObjectURL(f.url));
+    lastDownloads = []; clearLinks();
+  }
+
+  function renderFileList(files){
+    if(!files || !files.length){ fileList.innerHTML = '<div class="muted">No files selected.</div>'; return; }
+    let html = '<div class="grid"><div><strong>File</strong></div><div><strong>Size</strong></div><div><strong>Select</strong></div>';
+    for(const f of files){
+      html += `<div class="muted">${f.name}</div><div class="muted">${human(f.size)} bytes</div>
+               <div><input type="checkbox" class="pick" data-name="${encodeURIComponent(f.name)}" checked /></div>`;
+    }
+    html += '</div>';
+    fileList.innerHTML = html;
+  }
+  function getPickedFiles(){
+    const picks = [...fileList.querySelectorAll('.pick')].filter(x=>x.checked).map(x=>decodeURIComponent(x.dataset.name));
+    const map = new Map([...fileInput.files].map(f=>[f.name, f]));
+    return picks.map(n=>map.get(n)).filter(Boolean);
+  }
+
+  // ---------- header helpers ----------
+  function sanitizeHeaderName(s){
+    return String(s || '')
+      .replace(/^\uFEFF/, '')
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+  function maybeAutofillUniqueHeader(firstCol){
+    const current = (uniqueHeaderEl.value || '').trim();
+    const isDefaultish = !current || /^client[_ ]?id$/i.test(current);
+    if(isDefaultish && firstCol){ uniqueHeaderEl.value = sanitizeHeaderName(firstCol); }
+  }
+  function renameHeaderForOutput(header){
+    const desired = sanitizeHeaderName(uniqueHeaderEl.value || '');
+    if(!Array.isArray(header) || !header.length || !desired) return header || [];
+    const out = header.slice();
+    out[0] = desired;
+    return out;
+  }
+
+  fileInput.addEventListener('change', async ()=>{
+    renderFileList(fileInput.files);
+    const first = fileInput.files?.[0];
+    if(first){
+      try{ const hdr = await getHeader(first); maybeAutofillUniqueHeader(hdr[0]); }catch(e){}
+    }
+  });
+
+  // ---------- Papa config ----------
+  function selectedDelimiter(){
+    const v = delimiterEl.value;
+    if(v === 'auto') return '';
+    if(v === '\\t') return '\t';
+    return v;
+  }
+  // Keep worker mode; avoid function-valued options
+  function papaBase(){
+    return {
+      header: true,
+      worker: true,
+      dynamicTyping: false,
+      skipEmptyLines: 'greedy',
+      delimiter: selectedDelimiter() || undefined, // undefined = auto-detect
+      quoteChar: '"',
+      escapeChar: '"'
+    };
+  }
+  function normalizeHeader(fields){
+    if(!Array.isArray(fields)) return [];
+    return fields.map((h,i)=> (i===0 ? String(h).replace(/^\uFEFF/,'') : String(h)).trim());
+  }
+  function remapRow(row, original, normalized){
+    const out = {};
+    for(let i=0;i<original.length;i++){ out[normalized[i]] = row[original[i]]; }
+    return out;
+  }
+  async function stripExcelSepDirective(file){
+    const head = await file.slice(0, 1024).text();
+    const m = head.match(/^\uFEFF?sep=.*\r?\n/i);
+    if(!m) return file;
+    const cutAt = m[0].length;
+    return new Blob([file.slice(cutAt)], { type: file.type || 'text/csv' });
+  }
+  async function getHeader(file){
+    const cleaned = await stripExcelSepDirective(file);
+    return new Promise((resolve,reject)=>{
+      Papa.parse(cleaned, {
+        ...papaBase(),
+        preview: 1,
+        complete: res => resolve(normalizeHeader(res.meta?.fields || [])),
+        error: reject
+      });
+    });
+  }
+
+  // Robust first-column getter
+  function getFirstColValue(row, header){
+    if(!row) return undefined;
+    const name = header?.[0];
+    let v = (name!=null && Object.prototype.hasOwnProperty.call(row, name)) ? row[name] : undefined;
+    if(v === undefined){
+      const k = Object.keys(row)[0];
+      if(k !== undefined) v = row[k];
+    }
+    return v;
+  }
+
+  async function streamRows(file, {onRow, onStart, onEnd}){
+    const cleaned = await stripExcelSepDirective(file);
+    return new Promise((resolve, reject)=>{
+      let originalHdr = null;
+      let headerFields = null;
+      let mismatchWarned = false;
+      Papa.parse(cleaned, {
+        ...papaBase(),
+        step: (results)=>{
+          if(!originalHdr){
+            originalHdr = results.meta.fields || [];
+            headerFields = normalizeHeader(originalHdr);
+            onStart && onStart(headerFields);
+            maybeAutofillUniqueHeader(headerFields[0]);
+            log(`Detected header: ${headerFields.join(' | ')}`);
+            log(`→ Using first column: "${headerFields[0]}"`);
+          }
+          const row = remapRow(results.data, originalHdr, headerFields);
+
+          const keys = Object.keys(row);
+          const unexpected = keys.filter(k => !headerFields.includes(k));
+          if(!mismatchWarned && (unexpected.length || keys.length !== headerFields.length)){
+            mismatchWarned = true;
+            log(`⚠ Field mismatch detected on at least one row (expected ${headerFields.length}, saw ${keys.length}). This usually means an unquoted delimiter inside a cell.`);
+          }
+          onRow && onRow(row, headerFields);
+        },
+        complete: ()=>{ onEnd && onEnd(headerFields); resolve(); },
+        error: reject
+      });
+    });
+  }
+
+  // Write using "read header" for values and optional "write header" for column names
+  function buildCSV(headerRead, rows, headerWrite){
+    const esc = v => v==null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g,'""')}"` : String(v);
+    const lines = [];
+    const writeHeader = headerWrite || headerRead;
+    if(writeHeader) lines.push(writeHeader.map(esc).join(','));
+    for(const r of rows){ lines.push(headerRead.map(h=>esc(r[h]))); }
+    return lines.join('\n') + '\n';
+  }
+
+  // ---------- actions ----------
+  async function deduplicate(files){
+    clearLog(); resetDownloads();
+    startTask('Deduplicate (first column)');
+
+    const mode = uniqueModeEl.value;  // 'firstcol' | 'fullrows'
+    const seen = new Set();
+    let header = null;
+    const uniqueRows = [];
+    const uniqueFirst = [];
+    let scanned = 0, nonEmpty = 0;
+
+    try {
+      for(const file of files){
+        log(`Reading ${file.name} ...`);
+        await streamRows(file, {
+          onStart: (hdr)=>{ if(!header) header = hdr; },
+          onRow: (row)=>{
+            scanned++;
+            const keyRaw = getFirstColValue(row, header);
+            const key = keyRaw==null ? '' : String(keyRaw).trim();
+            if(!key) return;
+            nonEmpty++;
+            if(!seen.has(key)){
+              seen.add(key);
+              if(mode === 'fullrows') uniqueRows.push(row);
+              else uniqueFirst.push(key);
+            }
+          }
+        });
+      }
+      log(`Rows scanned: ${human(scanned)} | non-empty first-col: ${human(nonEmpty)} | unique: ${human(seen.size)}`);
+
+      if(mode === 'fullrows'){
+        const outHeader = renameHeaderForOutput(header); // write name may change
+        const csv = buildCSV(header, uniqueRows, outHeader);
+        remember('deduplicated_unique.csv', new Blob([csv],{type:'text/csv'}));
+      } else {
+        const colHeader = sanitizeHeaderName(uniqueHeaderEl.value || header?.[0] || 'client_id') || 'client_id';
+        const csv = colHeader + '\n' + uniqueFirst.join('\n') + '\n';
+        remember('deduplicated_unique_first_column.csv', new Blob([csv],{type:'text/csv'}));
+      }
+      endTask('Deduplicate (first column)');
+    } catch (e){ taskError('Deduplicate (first column)', e); }
+  }
+
+  async function splitFiles(files, rowsPer){
+    clearLog(); resetDownloads();
+    startTask('Split each file');
+    try{
+      for(const file of files){
+        let headerRead=null, headerWrite=null, buf=[], part=1, count=0;
+        const flush = ()=>{
+          if(!buf.length) return;
+          const csv = buildCSV(headerRead, buf, headerWrite);
+          const name = `${file.name}.part${String(part).padStart(3,'0')}.csv`;
+          remember(name, new Blob([csv],{type:'text/csv'}));
+          log(`Wrote ${name} rows=${human(buf.length)}`);
+          part++; buf=[];
+        };
+        log(`Splitting: ${file.name}`);
+        await streamRows(file, {
+          onStart: (hdr)=>{ headerRead = hdr; headerWrite = renameHeaderForOutput(hdr); },
+          onRow: (row)=>{ buf.push(row); count++; if(buf.length>=rowsPer) flush(); },
+          onEnd: ()=>{ flush(); if(count===0) log('NOTE: Empty file.'); }
+        });
+        log(`Split done for ${file.name}, approx rows=${human(count)}`);
+      }
+      endTask('Split each file');
+    } catch(e){ taskError('Split each file', e); }
+  }
+
+  async function combineSelected(files){
+    clearLog(); resetDownloads();
+    startTask('Combine selected → One file');
+    try{
+      if(!files.length){ log('No files selected.'); endTask('Combine selected → One file'); return; }
+      const headers = [];
+      for(const f of files){ headers.push(await getHeader(f)); }
+      const ref = headers[0] || [];
+      const match = headers.every(h => Array.isArray(h) && h.length===ref.length && h.every((v,i)=>v===ref[i]));
+      if(!match){ throw new Error('Headers differ across selected files.'); }
+
+      const headerRead = ref;
+      const headerWrite = renameHeaderForOutput(ref);
+      let rows = [], total = 0;
+      for(const f of files){
+        log(`Reading: ${f.name}`);
+        await streamRows(f, { onRow: (row)=>{ rows.push(row); total++; } });
+      }
+      const csv = buildCSV(headerRead, rows, headerWrite);
+      remember('combined.csv', new Blob([csv],{type:'text/csv'}));
+      log(`✓ Combined total rows≈${human(total)}`);
+      endTask('Combine selected → One file');
+    } catch(e){ taskError('Combine selected → One file', e); }
+  }
+
+  // ---------- zip & bulk download ----------
+  async function zipLast(){
+    if(!lastDownloads.length){ log('Nothing to ZIP yet.'); return; }
+    const zip = new JSZip();
+    for(const {name, blob} of lastDownloads){ zip.file(name, blob); }
+    const out = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(out);
+    const a = document.createElement('a'); a.href = url; a.download = 'outputs.zip'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  }
+  function downloadAll(){
+    if(!lastDownloads.length){ log('Nothing to download yet.'); return; }
+    lastDownloads.forEach(({name, url}, i)=>{
+      setTimeout(()=>{
+        const a = document.createElement('a'); a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+      }, i*200);
+    });
+  }
+
+  // ---------- buttons ----------
+  async function run(fn){ [dedupBtn, splitBtn, combineBtn].forEach(b=>b.disabled=true); try{ await fn(); } finally{ [dedupBtn, splitBtn, combineBtn].forEach(b=>b.disabled=false); } }
+  dedupBtn.addEventListener('click', ()=>{ const files=[...fileInput.files]; if(!files.length) return alert('Please select CSV files first.'); run(()=>deduplicate(files)); });
+  splitBtn.addEventListener('click', ()=>{ const files=[...fileInput.files]; if(!files.length) return alert('Please select CSV files first.'); run(()=>splitFiles(files, parseInt(rowsPerSplitEl.value,10))); });
+  combineBtn.addEventListener('click', ()=>{ const files=(function(){ const picks=[...fileList.querySelectorAll('.pick')].filter(x=>x.checked).map(x=>decodeURIComponent(x.dataset.name)); const map=new Map([...fileInput.files].map(f=>[f.name,f])); return picks.map(n=>map.get(n)).filter(Boolean); })(); if(!files.length) return alert('Select at least one file in the list.'); run(()=>combineSelected(files)); });
+  zipAllBtn.addEventListener('click', zipLast);
+  downloadAllBtn.addEventListener('click', downloadAll);
+</script>
+</body>
+</html>
