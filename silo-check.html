@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Silo-wise Row Counter + Downloader (Dark)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* ===== Dark theme tokens ===== */
+  :root{
+    --bg:#0f1115;        /* page background */
+    --card:#151924;      /* panels */
+    --fg:#e6e8f0;        /* main text */
+    --muted:#9aa3b2;     /* secondary text */
+    --soft:#23293a;      /* soft borders / rows */
+    --accent:#4c8dff;    /* primary button */
+    --accent-2:#2f6ae6;  /* primary hover */
+    --ghost:#2a3146;     /* ghost button bg */
+    --ghost-h:#364062;   /* ghost hover */
+    --table-head:#1a2030;
+    --success:#5ac99d;
+    --danger:#ff6b6b;
+    --radius:12px;
+  }
+  * { box-sizing: border-box; }
+  html,body { height:100%; }
+  body{
+    margin:0; padding:16px 18px 24px;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    background:var(--bg); color:var(--fg);
+  }
+
+  /* ===== Header row ===== */
+  .toolbar{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:12px;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  h1{ font-size:1.05rem; margin:0 0 10px 2px; color:var(--muted); font-weight:600; }
+  input[type="file"]{ color:var(--muted); }
+  .hint{ color:var(--muted); font-size:.85rem; margin:8px 2px 0; }
+  .badge{ color:var(--muted); font-size:.85rem; }
+
+  /* ===== Buttons ===== */
+  button{
+    border:0; border-radius:10px; padding:9px 12px; cursor:pointer;
+    background:var(--accent); color:#fff; font-weight:600;
+  }
+  button:hover{ background:var(--accent-2); }
+  button[disabled]{ opacity:.6; cursor:not-allowed; }
+  .btn-ghost{ background:var(--ghost); color:#e7ebff; }
+  .btn-ghost:hover{ background:var(--ghost-h); }
+
+  /* ===== Results ===== */
+  .panel{
+    background:var(--card);
+    border-radius:var(--radius);
+    margin-top:12px;
+    padding:0;
+    overflow:hidden;
+  }
+  table{ width:100%; border-collapse: collapse; }
+  thead th{
+    background:var(--table-head);
+    color:#cdd5e0; font-weight:700; font-size:.9rem;
+    text-align:left; padding:12px 14px; border-bottom:1px solid var(--soft);
+    position: sticky; top:0; z-index:1;
+  }
+  td{
+    border-bottom:1px solid var(--soft);
+    padding:12px 14px; vertical-align:middle; font-size:.95rem;
+  }
+  tbody tr:nth-child(odd) td{ background:transparent; }
+  tbody tr:nth-child(even) td{ background:#121725; }
+  tfoot td{
+    background:#121725; font-weight:800; border-top:1px solid var(--soft);
+    padding:12px 14px;
+  }
+  .checkbox{ width:18px; height:18px; }
+
+  /* ===== Bottom bar (bulk actions + timing) ===== */
+  .bottombar{
+    display:flex; gap:10px; align-items:center; justify-content:space-between;
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:10px 12px; margin-top:10px;
+    position: sticky; bottom:0;  /* sticks to bottom when long tables */
+    box-shadow: 0 -8px 24px rgba(0,0,0,.25);
+  }
+  .bottom-left{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .bottom-right{ display:flex; gap:10px; align-items:center; }
+  .error{ color:var(--danger); margin-top:8px; white-space:pre-wrap; }
+
+  .actions-col{ white-space:nowrap; }
+  .small { font-size:.85rem; padding:7px 10px; }
+
+  .spacer{ height:8px; } /* tiny spacer, keeps things snug */
+</style>
+</head>
+<body>
+  <h1>Silo-wise Row Counter</h1>
+
+  <div class="toolbar">
+    <input id="fileInput" type="file" accept=".csv,.tsv,.csv.gz,.tsv.gz" />
+    <button id="runBtn" disabled>Compute Counts</button>
+    <span id="fileInfo" class="badge"></span>
+  </div>
+  <div class="hint">Header must include <code>client_id</code> and <code>silo</code>. Works with gzip (.csv.gz / .tsv.gz) or plain text.</div>
+  <div id="error" class="error" style="display:none"></div>
+
+  <div id="results" style="display:none">
+    <div class="panel">
+      <table id="resultTable" aria-label="Silo counts">
+        <thead>
+          <tr>
+            <th style="width:36px"><input id="masterCheck" class="checkbox" type="checkbox" title="Select all" /></th>
+            <th>Silo</th>
+            <th>Count</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td>Grand total</td>
+            <td id="grandTotal">0</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- sticky bottom bar (bulk actions + downloads) -->
+    <div class="bottombar" id="bulkBar">
+      <div class="bottom-left">
+        <button id="selectAllBtn" class="btn-ghost small">Select all</button>
+        <button id="clearSelBtn" class="btn-ghost small">Clear</button>
+        <button id="downloadSelectedBtn" class="small" disabled>Download Selected</button>
+        <span id="selCount" class="badge"></span>
+      </div>
+      <div class="bottom-right">
+        <button id="downloadCountsBtn" class="btn-ghost small" title="Download counts as CSV">Download Counts</button>
+        <span id="timing" class="badge"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- DOM refs ---------- */
+    const fileInput = document.getElementById('fileInput');
+    const runBtn = document.getElementById('runBtn');
+    const resultsEl = document.getElementById('results');
+    const errorEl = document.getElementById('error');
+    const tbody = document.querySelector('#resultTable tbody');
+    const grandTotalEl = document.getElementById('grandTotal');
+    const timingEl = document.getElementById('timing');
+    const fileInfoEl = document.getElementById('fileInfo');
+    const bulkBar = document.getElementById('bulkBar');
+    const masterCheck = document.getElementById('masterCheck');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const clearSelBtn = document.getElementById('clearSelBtn');
+    const downloadSelectedBtn = document.getElementById('downloadSelectedBtn');
+    const selCountEl = document.getElementById('selCount');
+    const downloadCountsBtn = document.getElementById('downloadCountsBtn');
+
+    /* ---------- state ---------- */
+    let lastCounts = null;   // Map(silo -> count)
+    let lastTotal = 0;
+    let lastText = null;     // whole file text (decompressed)
+    let lastDelimiter = ','; // ',' or '\t'
+    let siloIdx = -1;
+    let headerLine = '';
+
+    /* ---------- helpers ---------- */
+    function showError(msg){ errorEl.style.display='block'; errorEl.textContent=msg; resultsEl.style.display='none'; }
+    function clearError(){ errorEl.style.display='none'; errorEl.textContent=''; }
+
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files?.[0];
+      runBtn.disabled = !f;
+      fileInfoEl.textContent = f ? `${f.name} — ${(f.size/1024/1024).toFixed(2)} MB` : '';
+      clearError(); resultsEl.style.display='none';
+    });
+
+    runBtn.addEventListener('click', async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      clearError(); runBtn.disabled = true;
+      const t0 = performance.now();
+      try {
+        const text = await readTextPossiblyGzip(file);
+        const { counts, total, delimiter, header, siloIndex } = analyze(text);
+        lastCounts = counts; lastTotal = total; lastText = text;
+        lastDelimiter = delimiter; headerLine = header; siloIdx = siloIndex;
+        renderTable(counts, total);
+        resultsEl.style.display = 'block';
+        timingEl.textContent = `Processed in ${(performance.now()-t0).toFixed(0)} ms`;
+      } catch (e) {
+        console.error(e); showError(`Failed: ${e?.message || e}`);
+      } finally { runBtn.disabled = false; }
+    });
+
+    /* ---------- gzip (native first, CDN fallback) ---------- */
+    async function readTextPossiblyGzip(file){
+      const gz = /\.gz$/i.test(file.name);
+      if (!gz) return file.text();
+      if ('DecompressionStream' in window){
+        const stream = file.stream().pipeThrough(new DecompressionStream('gzip'));
+        return new Response(stream).text();
+      }
+      await ensurePako();
+      const buf = new Uint8Array(await file.arrayBuffer());
+      const out = window.pako.ungzip(buf);
+      return new TextDecoder('utf-8').decode(out);
+    }
+    function ensurePako(){
+      return new Promise((res, rej) => {
+        if (window.pako) return res();
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js';
+        s.onload = () => window.pako ? res() : rej(new Error('pako loaded but not available'));
+        s.onerror = () => rej(new Error('Could not load pako from CDN.'));
+        document.head.appendChild(s);
+      });
+    }
+
+    /* ---------- analyze + count ---------- */
+    function analyze(text){
+      const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(Boolean);
+      if (!lines.length) throw new Error('Empty file.');
+      const header = lines[0].trim();
+      const delimiter = header.includes('\t') ? '\t' : (header.includes(',') ? ',' : null);
+      if (!delimiter) throw new Error('Could not detect delimiter (tab or comma).');
+
+      const headers = header.split(delimiter).map(h => h.trim().toLowerCase());
+      const sIdx = headers.indexOf('silo');
+      const cIdx = headers.indexOf('client_id');
+      if (sIdx === -1) throw new Error('Header must include "silo".');
+      if (cIdx === -1) throw new Error('Header must include "client_id".');
+
+      const counts = new Map(); let total=0;
+      for (let i=1;i<lines.length;i++){
+        const cols = lines[i].split(delimiter);
+        if (cols.length <= sIdx) continue;
+        const v = (cols[sIdx] ?? '').trim();
+        if (!v) continue;
+        counts.set(v,(counts.get(v)||0)+1); total++;
+      }
+      return { counts, total, delimiter, header, siloIndex: sIdx };
+    }
+
+    /* ---------- render table ---------- */
+    function renderTable(countsMap, total){
+      const rows = Array.from(countsMap.entries()).sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]));
+      tbody.innerHTML='';
+      for (const [silo,count] of rows){
+        const tr = document.createElement('tr');
+
+        const td0 = document.createElement('td');
+        const cb = document.createElement('input');
+        cb.type='checkbox'; cb.className='checkbox siloCheck'; cb.dataset.silo=silo;
+        cb.addEventListener('change', updateSelectionUI);
+        td0.appendChild(cb);
+
+        const td1 = document.createElement('td'); td1.textContent = silo;
+        const td2 = document.createElement('td'); td2.textContent = String(count);
+
+        const td3 = document.createElement('td'); td3.className='actions-col';
+        const btn = document.createElement('button'); btn.textContent='Download'; btn.className='small';
+        btn.addEventListener('click', ()=> downloadForSilos([silo]));
+        td3.appendChild(btn);
+
+        tr.appendChild(td0); tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+        tbody.appendChild(tr);
+      }
+      grandTotalEl.textContent = String(total);
+
+      // reset selections
+      masterCheck.checked = false;
+      updateSelectionUI();
+    }
+
+    /* ---------- selection + bulk actions ---------- */
+    function selectedSilos(){
+      return Array.from(document.querySelectorAll('.siloCheck'))
+              .filter(cb => cb.checked).map(cb => cb.dataset.silo);
+    }
+    function updateSelectionUI(){
+      const n = selectedSilos().length;
+      downloadSelectedBtn.disabled = n===0;
+      selCountEl.textContent = n ? `${n} selected` : '';
+    }
+    masterCheck.addEventListener('change', ()=>{
+      document.querySelectorAll('.siloCheck').forEach(cb => cb.checked = masterCheck.checked);
+      updateSelectionUI();
+    });
+    selectAllBtn.addEventListener('click', ()=>{
+      document.querySelectorAll('.siloCheck').forEach(cb => cb.checked = true);
+      masterCheck.checked = true; updateSelectionUI();
+    });
+    clearSelBtn.addEventListener('click', ()=>{
+      document.querySelectorAll('.siloCheck').forEach(cb => cb.checked = false);
+      masterCheck.checked = false; updateSelectionUI();
+    });
+    downloadSelectedBtn.addEventListener('click', ()=>{
+      const sel = selectedSilos(); if (sel.length) downloadForSilos(sel);
+    });
+
+    /* ---------- downloads ---------- */
+    function downloadForSilos(silos){
+      if (!lastText) return;
+      const set = new Set(silos.map(String));
+      const lines = lastText.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+      const out = [headerLine];
+      for (let i=1;i<lines.length;i++){
+        const ln = lines[i]; if (!ln) continue;
+        const cols = ln.split(lastDelimiter);
+        const v = (cols[siloIdx] ?? '').trim();
+        if (set.has(v)) out.push(ln);
+      }
+      triggerDownload(new Blob([out.join('\n')],{type:'text/csv;charset=utf-8'}),
+                      `silo_${silos.length===1 ? silos[0] : silos.join('_')}.csv`);
+    }
+    downloadCountsBtn.addEventListener('click', ()=>{
+      if (!lastCounts) return;
+      const rows = Array.from(lastCounts.entries()).sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]));
+      const csv = ['silo,count', ...rows.map(([s,c]) => `${csvEscape(s)},${c}`), `Grand total,${lastTotal}`].join('\n');
+      triggerDownload(new Blob([csv],{type:'text/csv;charset=utf-8'}),'silo_counts.csv');
+    });
+
+    function triggerDownload(blob, filename){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=filename;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+    function csvEscape(v){ const needs=/[",\n]/.test(v); const esc=String(v).replace(/"/g,'""'); return needs?`"${esc}"`:esc; }
+  </script>
+</body>
+</html>
